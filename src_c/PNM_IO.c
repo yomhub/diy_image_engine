@@ -2,40 +2,42 @@
 
 PNM_STATE ReadPNMFile(PNM *f, uint16_t pa)
 {
+	myassert(f->filename);
     PNM_STATE s_this;
     FILE *pf_read;
     pf_read = fopen(f->filename,"rb");
     if(!pf_read)return PNM_RT_ERR;
 
-    n_pnmGlobalState = ReadHeader(f, f_istream);
-    if (n_pnmGlobalState != PNM_SUCCESS)
-        return n_pnmGlobalState;
+    s_this = ReadHeader(f, pf_read);
+    if (s_this != PNM_SUCCESS)
+        return s_this;
 
     if (f->type == NO_TYPE)
         return PNM_FILE_FORMAT_ERR;
     if (f->type == PBM_ASCII || f->type == PBM_BINARY){
-        ReadPBMFile(f,pa);
+        ReadPBMFile(f, pf_read, pa);
     }else{
-        ReadPixelData(f, f_istream);
+        ReadPixelData(f, pf_read);
     }
-	f_istream.close();
+	fclose(pf_read);
+	pf_read = NULL;
     return PNM_SUCCESS;
 }
 
-PNM_STATE ReadPBMFile(PNM *f, uint16_t const pa)
+PNM_STATE ReadPBMFile(PNM *f, FILE* is, uint16_t const pa)
 {
-    myassert(f->data.data() != nullptr, "Read err");
-	std::vector<std::uint8_t> buff;
+    myassert(f->data);
+	uchar *buff;
     if (f->type == NO_TYPE)
     {
-        OpenFileStream(f, &f_istream);
-        ReadHeader(f, f_istream);
+        OpenFileStream(f, is);
+        ReadHeader(f, is);
     }
     if (f->type == NO_TYPE)
         return PNM_FILE_FORMAT_ERR;
-    ReadPixelData(f, f_istream);
+    ReadPixelData(f, is);
 
-	std::size_t n_start, n_size;
+	size_t n_start, n_size;
 	n_start = f_istream.tellg();
 	f_istream.seekg(0, f_istream.end);
 	n_size = (std::size_t)f_istream.tellg() - n_start;
@@ -269,10 +271,32 @@ PNM_STATE ReadHeader(PNM *f, FILE *is)
     uint16_t n_size;
     getFileLen(n_size,is);
 
-    fread
-    is >> f->magic_number >> f->width >> f->height >> f->max_value;
-	f->threshold = f->max_value / 2;
-	f->type = MagNum2PNMTYPE(f->magic_number);
+	// Frist 2 Byte magic number
+	fread(f->magicNumber,2,1,is);
+	n_size -= 2;
+	if (f->magicNumber[0] != 'P')return PNM_RT_ERR;
+	uint8_t s = 0, e = 0,i=0;
+	bool ishit=false;
+	while (n_size > (0+ sizeof(buff))) {
+
+		fread(buff, sizeof(buff), 1, is);
+		sscanf_s(buff, "%d.%d.%d", &f->width, &f->height, &f->maxValue);
+		if (f->width == 0 || f->height == 0 || f->maxValue == 0) {
+			sscanf_s(buff, "%d %d %d", &f->width, &f->height, &f->maxValue);
+		}
+		if (f->width == 0 || f->height == 0 || f->maxValue == 0) {
+			n_size -= sizeof(buff);
+			continue;
+		}
+		else break;
+	}
+	if (n_size > (0 + sizeof(buff))) {
+		f->width = f->height = f->maxValue = 0;
+		return PNM_FILE_FORMAT_ERR;
+	}
+
+	f->threshold = f->maxValue / 2;
+	f->type = MagNum2PNMTYPE(f->magicNumber);
     
 #ifdef NDEBUG
     if (!(header.width && header.height && header.max_value))

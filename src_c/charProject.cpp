@@ -6,8 +6,6 @@
 
 #include <iostream>
 
-//#include "include/CmdArgsMap.hpp"
-
 #ifdef DEBUG
 
 #include <utils/catch_utils.h>
