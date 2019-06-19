@@ -15,7 +15,7 @@
 #include <chrono>
 
 #if defined(_WIN32) || defined(_WIN64)
-#define myfloat float//std::float_t
+#define myfloat std::float_t
 #else
 #define myfloat float
 #endif
@@ -69,8 +69,8 @@ struct PNM
 		this->magic_number = "";
 	};
 	std::string filename;
-	std::size_t width;
-	std::size_t height;
+	std::uint16_t width;
+	std::uint16_t height;
 	std::uint8_t threshold = 128;
 	std::uint32_t max_value = 255;
 	PNMTYPE type;

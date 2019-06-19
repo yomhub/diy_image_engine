@@ -1,45 +1,11 @@
 #include "include/PNM_IO.h"
 
-//using namespace pnm_io;
-
-pnm_io::PNM_IO::PNM_IO()
+PNM_STATE ReadPNMFile(PNM *f, uint16_t pa)
 {
-    p_mainThread = NULL;
-    n_pnmThreadState = PNM_UNINITIALIZED;
-    n_pnmGlobalState = PNM_SUCCESS;
-}
-
-pnm_io::PNM_IO::~PNM_IO()
-{
-	if (p_mainThread || n_pnmThreadState != PNM_UNINITIALIZED) {
-		DeleteTask();
-	}
-    if (f_istream.is_open())
-        f_istream.close();
-    if (f_ostream.is_open())
-        f_ostream.close();
-}
-
-template <typename FileStreamT>
-pnm_io::PNM_STATE pnm_io::PNM_IO::OpenFileStream(PNM const *f, FileStreamT *f_stream, std::ios_base::openmode const mode)
-{
-    myassert(f_stream != nullptr, "FileStream is null");
-    myassert(!f->filename.empty(), "File name is empty");
-
-    if (f_stream->is_open())
-        f_stream->close();
-    f_stream->open(f->filename, mode);
-
-    if (!f_stream->is_open())
-        return PNM_RT_ERR;
-    return PNM_SUCCESS;
-}
-
-pnm_io::PNM_STATE pnm_io::PNM_IO::ReadPNMFile(PNM *f, std::uint16_t const pa)
-{
-    n_pnmGlobalState = OpenFileStream(f, &f_istream);
-    if (n_pnmGlobalState != PNM_SUCCESS)
-        return n_pnmGlobalState;
+    PNM_STATE s_this;
+    FILE *pf_read;
+    pf_read = fopen(f->filename,"rb");
+    if(!pf_read)return PNM_RT_ERR;
 
     n_pnmGlobalState = ReadHeader(f, f_istream);
     if (n_pnmGlobalState != PNM_SUCCESS)
@@ -56,7 +22,7 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::ReadPNMFile(PNM *f, std::uint16_t const pa)
     return PNM_SUCCESS;
 }
 
-pnm_io::PNM_STATE pnm_io::PNM_IO::ReadPBMFile(PNM *f, std::uint16_t const pa)
+PNM_STATE ReadPBMFile(PNM *f, uint16_t const pa)
 {
     myassert(f->data.data() != nullptr, "Read err");
 	std::vector<std::uint8_t> buff;
@@ -95,7 +61,7 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::ReadPBMFile(PNM *f, std::uint16_t const pa)
     return PNM_SUCCESS;
 }
 
-pnm_io::PNM_STATE pnm_io::PNM_IO::ReadPGMFile(PNM *f)
+PNM_STATE ReadPGMFile(PNM *f)
 {
     if (f->type == NO_TYPE)
     {
@@ -109,7 +75,7 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::ReadPGMFile(PNM *f)
     return PNM_SUCCESS;
 }
 
-pnm_io::PNM_STATE pnm_io::PNM_IO::ReadPPMFile(PNM *f)
+PNM_STATE ReadPPMFile(PNM *f)
 {
     if (f->type == NO_TYPE)
     {
@@ -123,7 +89,7 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::ReadPPMFile(PNM *f)
     return PNM_SUCCESS;
 }
 
-pnm_io::PNM_STATE pnm_io::PNM_IO::WritePNMFile(PNM *f, std::uint16_t const pa)
+PNM_STATE WritePNMFile(PNM *f, uint16_t const pa)
 {
     myassert(f->type != NO_TYPE, "Write err: PPM type err");
 	if (f->type == PBM_ASCII || f->type == PBM_BINARY)return WritePBMFile(f,pa);
@@ -134,7 +100,7 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::WritePNMFile(PNM *f, std::uint16_t const pa)
     return PNM_SUCCESS;
 }
 
-pnm_io::PNM_STATE pnm_io::PNM_IO::WritePBMFile(PNM *f, std::uint16_t const pa)
+PNM_STATE WritePBMFile(PNM *f, uint16_t const pa)
 {
     myassert(f->type == PBM_ASCII || f->type == PBM_BINARY, "Write err: PPM type err");
 	OpenFileStream(f, &f_ostream);
@@ -147,22 +113,22 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::WritePBMFile(PNM *f, std::uint16_t const pa)
 	return PNM_SUCCESS;
 }
 
-pnm_io::PNM_STATE pnm_io::PNM_IO::WritePGMFile(PNM *f)
+PNM_STATE WritePGMFile(PNM *f)
 {
     myassert(f->type == PGM_ASCII || f->type == PGM_BINARY, "Write err: PPM type err");
     return WritePNMFile(f);
 }
 
-pnm_io::PNM_STATE pnm_io::PNM_IO::WritePPMFile(PNM *f)
+PNM_STATE WritePPMFile(PNM *f)
 {
     myassert(f->type == PPM_ASCII || f->type == PPM_BINARY, "Write err: PPM type err");
     return WritePNMFile(f);
 }
 
-pnm_io::PNM_STATE pnm_io::PNM_IO::ConvertFormat(PNM *src, PNM *dst, std::vector<myfloat> const *pa)
+PNM_STATE ConvertFormat(PNM *src, PNM *dst, std::vector<myfloat> const *pa)
 {
-    myassert(src->type != NO_TYPE && dst->type != NO_TYPE, "Type err at pnm_io::PNM_IO::ConvertFormat");
-	myassert(src->data.data() != nullptr , "NULL ptr at pnm_io::PNM_IO::ConvertFormat");
+    myassert(src->type != NO_TYPE && dst->type != NO_TYPE, "Type err at ConvertFormat");
+	myassert(src->data.data() != nullptr , "NULL ptr at ConvertFormat");
 
 	if ((src->type == PGM_ASCII || src->type == PGM_BINARY) &&
 		(dst->type == PPM_ASCII || dst->type == PPM_BINARY)) {
@@ -184,7 +150,7 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::ConvertFormat(PNM *src, PNM *dst, std::vector<
 
 		dst->width = src->width;
 		dst->height = src->height;
-		dst->magic_number = detail::PNMTYPE2MagNum(dst->type);
+		dst->magic_number = PNMTYPE2MagNum(dst->type);
 		RGB2Greyscale(src->width, src->height, &src->data, &dst->data);
 
 		if (n_pnmGlobalState != PNM_SUCCESS) {
@@ -196,10 +162,10 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::ConvertFormat(PNM *src, PNM *dst, std::vector<
     return PNM_SUCCESS;
 }
 
-pnm_io::PNM_STATE pnm_io::PNM_IO::ConvertFormat(PNM *f, PNMTYPE type, std::vector<myfloat> const *pa)
+PNM_STATE ConvertFormat(PNM *f, PNMTYPE type, std::vector<myfloat> const *pa)
 {
-	myassert(f->type != NO_TYPE , "Type err at pnm_io::PNM_IO::ConvertFormat");
-	myassert(f->data.data() != nullptr , "NULL ptr at pnm_io::PNM_IO::ConvertFormat");
+	myassert(f->type != NO_TYPE , "Type err at ConvertFormat");
+	myassert(f->data.data() != nullptr , "NULL ptr at ConvertFormat");
 	std::vector<std::uint8_t> buff;
 
 	if ((f->type == PGM_ASCII || f->type == PGM_BINARY) &&
@@ -214,7 +180,7 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::ConvertFormat(PNM *f, PNMTYPE type, std::vecto
 		if (n_pnmGlobalState != PNM_SUCCESS) {
 			buff.swap(f->data);	
 		}
-		f->magic_number = detail::PNMTYPE2MagNum(type);
+		f->magic_number = PNMTYPE2MagNum(type);
 		
 	}
 	if ((f->type == PPM_ASCII || f->type == PPM_BINARY) &&
@@ -224,12 +190,12 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::ConvertFormat(PNM *f, PNMTYPE type, std::vecto
 		if (n_pnmGlobalState != PNM_SUCCESS) {
 			buff.swap(f->data);
 		}
-		f->magic_number = detail::PNMTYPE2MagNum(type);
+		f->magic_number = PNMTYPE2MagNum(type);
 	}
     return PNM_SUCCESS;
 }
 
-void pnm_io::PNM_IO::ThreadMain(void(*cbfun)(PNM f), std::vector<std::string> const * s_list)
+void ThreadMain(void(*cbfun)(PNM f), std::vector<std::string> const * s_list)
 {
 	PNM n_pnm;
 	for (auto s_fName : *s_list) {
@@ -251,7 +217,7 @@ void pnm_io::PNM_IO::ThreadMain(void(*cbfun)(PNM f), std::vector<std::string> co
 	n_pnmThreadState = PNM_WAIT_DELETE;
 }
 
-pnm_io::PNM_STATE pnm_io::PNM_IO::CreateTask(void (*cbfun)(PNM f), std::vector<std::string> const * s_list)
+PNM_STATE CreateTask(void (*cbfun)(PNM f), std::vector<std::string> const * s_list)
 {
 	
 	if (n_pnmThreadState == PNM_WAIT_DELETE) {
@@ -266,19 +232,19 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::CreateTask(void (*cbfun)(PNM f), std::vector<s
 	return PNM_SUCCESS;
 }
 
-pnm_io::PNM_STATE pnm_io::PNM_IO::StartTask() {
+PNM_STATE StartTask() {
 	if (n_pnmThreadState != PNM_THREAD_RUNNING)return PNM_UNINITIALIZED;
 	n_pnmThreadState = PNM_THREAD_RUNNING;
 	return PNM_SUCCESS;
 }
-pnm_io::PNM_STATE pnm_io::PNM_IO::PauseTask()
+PNM_STATE PauseTask()
 {
 	if (n_pnmThreadState != PNM_THREAD_RUNNING)return PNM_UNINITIALIZED;
 	n_pnmThreadState = PNM_PAUSE;
 	return PNM_SUCCESS;
 }
 
-pnm_io::PNM_STATE pnm_io::PNM_IO::DeleteTask()
+PNM_STATE DeleteTask()
 {
 	if (p_mainThread && n_pnmThreadState == PNM_WAIT_DELETE) {
 		delete(p_mainThread);
@@ -297,12 +263,16 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::DeleteTask()
 /*
 	Will return PNM_RT_ERR when read error value
 */
-pnm_io::PNM_STATE pnm_io::PNM_IO::ReadHeader(PNM *f, std::istream &is)
+PNM_STATE ReadHeader(PNM *f, FILE *is)
 {
-    is.seekg(0, std::ios::beg);
+    uchar buff[20];
+    uint16_t n_size;
+    getFileLen(n_size,is);
+
+    fread
     is >> f->magic_number >> f->width >> f->height >> f->max_value;
 	f->threshold = f->max_value / 2;
-	f->type = detail::MagNum2PNMTYPE(f->magic_number);
+	f->type = MagNum2PNMTYPE(f->magic_number);
     
 #ifdef NDEBUG
     if (!(header.width && header.height && header.max_value))
@@ -311,11 +281,11 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::ReadHeader(PNM *f, std::istream &is)
         return PNM_RT_ERR;
     }
 #endif // NDEBUG
-    myassert(f->width != 0 || f->height != 0 || f->max_value != 0, "Error reading value at pnm_io::PNM_IO::ReadHeader");
+    myassert(f->width != 0 || f->height != 0 || f->max_value != 0, "Error reading value at ReadHeader");
     return PNM_SUCCESS;
 }
 
-pnm_io::PNM_STATE pnm_io::PNM_IO::ReadPixelData(PNM *f, std::istream &is)
+PNM_STATE ReadPixelData(PNM *f, std::istream &is)
 {
     if (!is)
         return PNM_RT_ERR;
@@ -337,14 +307,14 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::ReadPixelData(PNM *f, std::istream &is)
     return PNM_SUCCESS;
 }
 
-pnm_io::PNM_STATE pnm_io::PNM_IO::WriteHeader(PNM *f, std::ostream &os)
+PNM_STATE WriteHeader(PNM *f, std::ostream &os)
 {
     myassert(f->width && f->height && f->max_value, "Write data err");
     if (f->magic_number.empty())
     {
         if (f->type == NO_TYPE)
             return PNM_RT_ERR;
-        f->magic_number = detail::PNMTYPE2MagNum(f->type);
+        f->magic_number = PNMTYPE2MagNum(f->type);
     }
     os << f->magic_number << "\n"
        << f->width << "\n"
@@ -353,7 +323,7 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::WriteHeader(PNM *f, std::ostream &os)
     return PNM_SUCCESS;
 }
 
-pnm_io::PNM_STATE pnm_io::PNM_IO::WritePixelData(PNM *f, std::ostream &os)
+PNM_STATE WritePixelData(PNM *f, std::ostream &os)
 {
     myassert(f->data.data() != nullptr && f->data.size() > 0, "Write err");
     os.write(reinterpret_cast<char const *>(f->data.data()), f->data.size());
@@ -371,7 +341,7 @@ Will return PNM_MEMERY_INSUFFICIENT: Not enough memery
             PNM_RT_ERR             : Parameter error
             PNM_SUCCESS            : Success
 */
-pnm_io::PNM_STATE pnm_io::PNM_IO::Greyscale2RGB(
+PNM_STATE Greyscale2RGB(
     std::size_t const width,
     std::size_t const height,
     myfloat const fr,
@@ -395,9 +365,9 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::Greyscale2RGB(
     {
         for (auto col = std::size_t{0}; col < width; ++col)
         {
-            rgb_pixel_data->data()[3 * (col + row * width)] = detail::clamp(0.0f, 1.0f, fr) * greyscale_pixel_data->data()[col + row * width];
-            rgb_pixel_data->data()[3 * (col + row * width) + 1] = detail::clamp(0.0f, 1.0f, fb) * greyscale_pixel_data->data()[col + row * width];
-            rgb_pixel_data->data()[3 * (col + row * width) + 2] = detail::clamp(0.0f, 1.0f, fg) * greyscale_pixel_data->data()[col + row * width];
+            rgb_pixel_data->data()[3 * (col + row * width)] = clamp(0.0f, 1.0f, fr) * greyscale_pixel_data->data()[col + row * width];
+            rgb_pixel_data->data()[3 * (col + row * width) + 1] = clamp(0.0f, 1.0f, fb) * greyscale_pixel_data->data()[col + row * width];
+            rgb_pixel_data->data()[3 * (col + row * width) + 2] = clamp(0.0f, 1.0f, fg) * greyscale_pixel_data->data()[col + row * width];
         }
     }
     return PNM_SUCCESS;
@@ -410,7 +380,7 @@ Will return PNM_MEMERY_INSUFFICIENT: Not enough memery
             PNM_RT_ERR             : Parameter error
             PNM_SUCCESS            : Success
 */
-pnm_io::PNM_STATE pnm_io::PNM_IO::RGB2Greyscale(
+PNM_STATE RGB2Greyscale(
     std::size_t const width,
     std::size_t const height,
     std::vector<std::uint8_t> *const rgb_pixel_data,
@@ -439,7 +409,7 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::RGB2Greyscale(
     return PNM_SUCCESS;
 }
 
-pnm_io::PNM_STATE pnm_io::PNM_IO::BitMap2Greyscale(
+PNM_STATE BitMap2Greyscale(
     std::size_t const width,
     std::size_t const height,
     std::uint8_t threshold,
@@ -471,10 +441,10 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::BitMap2Greyscale(
     return PNM_SUCCESS;
 }
 
-pnm_io::PNM_STATE pnm_io::PNM_IO::Greyscale2BitMap(
+PNM_STATE Greyscale2BitMap(
     std::size_t const width,
     std::size_t const height,
-    std::uint16_t threshold,
+    uint16_t threshold,
     std::vector<std::uint8_t> *const greyscale_pixel_data,
     std::vector<std::uint8_t> *const bit_map_data)
 {
@@ -502,3 +472,9 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::Greyscale2BitMap(
 
     return PNM_SUCCESS;
 }
+
+const struct PNM_IO PNM_IO = {
+    .ReadPNMFile = ReadPNMFile,
+    .ReadPBMFile = ReadPBMFile,
+    .n_pnmGlobalState = PNM_SUCCESS
+};
