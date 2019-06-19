@@ -14,7 +14,7 @@
 #include <catch2/catch.hpp>
 
 #endif // DEBUG
-//test
+
 #include "include/PNM_IO.h"
 #include "include/PixelEngine.h"
 
