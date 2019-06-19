@@ -275,6 +275,9 @@ PNM_STATE ReadHeader(PNM *f, FILE *is)
 	fread(f->magicNumber,2,1,is);
 	n_size -= 2;
 	if (f->magicNumber[0] != 'P')return PNM_RT_ERR;
+	f->type = MagNum2PNMTYPE(f->magicNumber);
+	if (f->type == NO_TYPE)return PNM_RT_ERR;
+					
 	uint8_t s = 0, e = 0,i=0;
 	bool ishit=false;
 	while (n_size > (0+ sizeof(buff))) {
@@ -292,11 +295,12 @@ PNM_STATE ReadHeader(PNM *f, FILE *is)
 	}
 	if (n_size > (0 + sizeof(buff))) {
 		f->width = f->height = f->maxValue = 0;
+		f->type = NO_TYPE;
 		return PNM_FILE_FORMAT_ERR;
 	}
 
 	f->threshold = f->maxValue / 2;
-	f->type = MagNum2PNMTYPE(f->magicNumber);
+	
     
 #ifdef NDEBUG
     if (!(header.width && header.height && header.max_value))
@@ -305,28 +309,33 @@ PNM_STATE ReadHeader(PNM *f, FILE *is)
         return PNM_RT_ERR;
     }
 #endif // NDEBUG
-    myassert(f->width != 0 || f->height != 0 || f->max_value != 0, "Error reading value at ReadHeader");
+    myassert(f->width != 0 || f->height != 0 || f->max_value != 0);
     return PNM_SUCCESS;
 }
 
-PNM_STATE ReadPixelData(PNM *f, std::istream &is)
+PNM_STATE ReadPixelData(PNM *f, FILE *is)
 {
-    if (!is)
-        return PNM_RT_ERR;
-    std::size_t n_start, n_size;
-    n_start = is.tellg();
-    is.seekg(0, is.end);
-    n_size = (std::size_t)is.tellg() - n_start;
-    is.seekg(n_start, is.beg);
+	myassert(is && f->height && f->width && f->data);
+	myassert(f->type != NO_TYPE);
 
-    if (f->data.size() < n_size)
-        f->data.resize(n_size);
-    if (f->data.size() < n_size)
-        return PNM_MEMERY_INSUFFICIENT;
+    size_t n_start, n_size;
+	getFileLen(n_size, is);
+	if (f->type == PPM_ASCII || f->type == PPM_BINARY) {
+		n_start = n_size - 3 * f->height * f->width;
+	}
+	else if (f->type == PBM_ASCII || f->type == PBM_BINARY) {
+		n_start = n_size - f->height * (f->width / 8+ f->width % 8);
+	}
+	else {
+		n_start = n_size - f->height * f->width;
+	}
+	fseek(n_start, 0, SEEK_SET);
 
-    is.read(reinterpret_cast<char *>(f->data.data()), n_size);
+	if (sizeof(f->data) < (n_size - n_start))
+		if(mymalloc(&f->data, n_size - n_start)== PNM_MEMERY_INSUFFICIENT)
+			return PNM_MEMERY_INSUFFICIENT;
 
-    if (!is)
+    if (fread(f->data, n_size - n_start, 1, is)< (n_size - n_start))
         return PNM_RT_ERR;
     return PNM_SUCCESS;
 }

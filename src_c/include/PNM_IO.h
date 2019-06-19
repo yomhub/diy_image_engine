@@ -5,6 +5,8 @@
 #include <stdint.h>		// For uint**_t
 #include <assert.h>		// Assert
 #include <stdbool.h>	// Bool
+#include <stdlib.h>		// Malloc
+
 
 #define uchar unsigned char
 
@@ -33,8 +35,7 @@
 		fseek(pfile,0,SEEK_END);	\
 		size=ftell(pfile);			\
 		fseek(pfile,0,SEEK_SET);	\
-
-
+		
 typedef enum PNM_STATE
 {
 	PNM_SUCCESS = 0, //  SUCCESS
@@ -101,6 +102,16 @@ typedef struct PNM
 	uchar magicNumber[2];
 	uchar* data;
 }PNM;
+
+inline PNM_STATE mymalloc(void** buff, size_t size) {
+	if (sizeof(*buff) < size) {
+		uchar* tmp;
+		tmp = realloc(*buff, size);
+		if (!tmp)return PNM_MEMERY_INSUFFICIENT;
+		*buff = tmp;
+	}
+	return PNM_SUCCESS;
+}
 
 struct PNM_IO
 {
