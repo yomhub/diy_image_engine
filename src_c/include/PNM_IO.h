@@ -6,7 +6,7 @@
 #include <assert.h>		// Assert
 #include <stdbool.h>	// Bool
 #include <stdlib.h>		// Malloc
-
+#include <math.h>		// float_t
 
 #define uchar unsigned char
 
@@ -66,30 +66,41 @@ typedef enum PNMTYPE
 	PFM_GREYSCALE //  Pf
 }PNMTYPE;
 
-#define PNMTYPE2MagNum(type)				\
-		type == NO_TYPE ? "  " : 			\
-		type == PBM_ASCII ? "P1" : 			\
-		type == PGM_ASCII ? "P2" : 			\
-		type == PPM_ASCII ? "P3" : 			\
-		type == PBM_BINARY ? "P4" : 		\
-		type == PGM_BINARY ? "P5" : 		\
-		type == PPM_BINARY ? "P6" : 		\
-		type == PAM ? "P7" : 				\
-		type == PFM_RGB ? "PF" : 			\
-		"Pf";								
+const char c_NO_TYPE = "  ";
+const char c_PBM_ASCII = "P1";
+const char c_PGM_ASCII = "P2";
+const char c_PPM_ASCII = "P3";
+const char c_PBM_BINARY = "P4";
+const char c_PGM_BINARY = "P5";
+const char c_PPM_BINARY = "P6";
+const char c_PAM = "P7";
+const char c_PFM_RGB = "PF";
+const char c_PFM_GREYSCALE = "pf";
 
-#define MagNum2PNMTYPE(magicNum)			\
-		magicNum == "P1" ? 					\
-		PBM_ASCII : magicNum == "P2" ? 		\
-		PGM_ASCII : magicNum == "P3" ? 		\
-		PPM_ASCII : magicNum == "P4" ? 		\
-		PBM_BINARY : magicNum == "P5" ? 	\
-		PGM_BINARY : magicNum == "P6" ? 	\
-		PPM_BINARY : magicNum == "P7" ? 	\
-		PAM : magicNum == "PF" ? 			\
-		PFM_RGB : magicNum == "Pf" ? 		\
-		PFM_GREYSCALE : 					\
-		NO_TYPE;								
+#define PNMTYPE2MagNum(type)					\
+		type == NO_TYPE ? c_NO_TYPE:			\
+		type == PBM_ASCII ? c_PBM_ASCII:		\
+		type == PGM_ASCII ? c_PGM_ASCII:		\
+		type == PPM_ASCII ? c_PPM_ASCII:		\
+		type == PBM_BINARY ? c_PBM_BINARY:		\
+		type == PGM_BINARY ? c_PGM_BINARY:		\
+		type == PPM_BINARY ? c_PPM_BINARY:		\
+		type == PAM ? c_PAM:					\
+		type == PFM_RGB ? c_PFM_RGB:			\
+		c_PFM_GREYSCALE;								
+
+#define MagNum2PNMTYPE(magicNum)				\
+		magicNum[0] != 'P' ? NO_TYPE :			\
+		magicNum[1] == '1' ? PBM_ASCII :		\
+		magicNum[1] == '2' ? PGM_ASCII :		\
+		magicNum[1] == '3' ? PPM_ASCII :		\
+		magicNum[1] == '4' ? PBM_ASCII :		\
+		magicNum[1] == '5' ? PGM_ASCII :		\
+		magicNum[1] == '6' ? PPM_ASCII :		\
+		magicNum[1] == '7' ? PAM :				\
+		magicNum[1] == 'F' ? PFM_RGB :			\
+		magicNum[1] == 'f' ? PFM_GREYSCALE :	\
+		NO_TYPE;
 
 typedef struct PNM
 {
@@ -104,7 +115,14 @@ typedef struct PNM
 }PNM;
 
 inline PNM_STATE mymalloc(void** buff, size_t size) {
-	if (sizeof(*buff) < size) {
+	if (!(*buff)) {
+		(*buff) = malloc(size);
+		if (!(*buff)) {
+			(*buff) = NULL;
+			return PNM_MEMERY_INSUFFICIENT;
+		}
+	}
+	else if (sizeof(*buff) < size) {
 		uchar* tmp;
 		tmp = realloc(*buff, size);
 		if (!tmp)return PNM_MEMERY_INSUFFICIENT;
@@ -116,62 +134,46 @@ inline PNM_STATE mymalloc(void** buff, size_t size) {
 struct PNM_IO
 {
 	// need PPM.filename
-	PNM_STATE (*ReadPNMFile)(PNM *f, uint16_t pa = 128);
-	PNM_STATE (*ReadPBMFile)(PNM *f, uint16_t pa = 128);
+	PNM_STATE (*ReadPNMFile)(PNM *f, uint16_t const pa);
+	PNM_STATE (*ReadPBMFile)(PNM *f, uint16_t const pa);
 	PNM_STATE (*ReadPGMFile)(PNM *f);
 	PNM_STATE (*ReadPPMFile)(PNM *f);
 
-	PNM_STATE (*WritePNMFile)(PNM *f, uint16_t const pa = 128);
-	PNM_STATE (*WritePBMFile)(PNM *f, uint16_t const pa = 128);
+	PNM_STATE (*WritePNMFile)(PNM *f, uint16_t const pa);
+	PNM_STATE (*WritePBMFile)(PNM *f, uint16_t const pa);
 	PNM_STATE (*WritePGMFile)(PNM *f);
 	PNM_STATE (*WritePPMFile)(PNM *f);
 
-	
-	PNM_STATE (*ConvertFormat)(PNM *src, PNM *dst, vector<myfloat> const *pa );
-	PNM_STATE (*ConvertFormat)(PNM *f, PNMTYPE type, vector<myfloat> const *pa);
-
-	PNM_STATE CreateTask(void (*cbfun)(PNM f), vector<string> const *s_list);
-	PNM_STATE StartTask();
-	PNM_STATE PauseTask();
-	PNM_STATE DeleteTask();
-
-	PNM_STATE (*ReadHeader)(PNM *f, istream &is);
-	PNM_STATE ReadPixelData(PNM *f, istream &is);
-
-	PNM_STATE WriteHeader(PNM *f, ostream &os);
-	PNM_STATE WritePixelData(PNM *f, ostream &os);
-
-	void ThreadMain(void(*cbfun)(PNM f),vector<string> const * s_list);
 	PNM_STATE (*Greyscale2RGB)(size_t const width,
 									 size_t const height,
 									 myfloat const fr,
 									 myfloat const fg,
 									 myfloat const fb,
-									 vector<uint8_t> *const greyscale_pixel_data,
-									 vector<uint8_t> *const rgb_pixel_data);
+									 uchar **greyscale_pixel_data,
+									 uchar **rgb_pixel_data);
 
 	PNM_STATE (*RGB2Greyscale)(size_t const width,
 									 size_t const height,
-									 vector<uint8_t> *const rgb_pixel_data,
-									 vector<uint8_t> *const greyscale_pixel_data);
+									 uchar **rgb_pixel_data,
+									 uchar **greyscale_pixel_data);
 
 	PNM_STATE (*BitMap2Greyscale)(size_t const width,
 										size_t const height,
 										uint8_t threshold,
-										vector<uint8_t> *const bit_map_data,
-										vector<uint8_t> *const greyscale_pixel_data);
+										uchar **bit_map_data,
+										uchar **greyscale_pixel_data);
 
 	PNM_STATE (*Greyscale2BitMap)(size_t const width,
 										size_t const height,
 										uint16_t threshold,
-										vector<uint8_t> *const greyscale_pixel_data,
-										vector<uint8_t> *const bit_map_data);
+										uchar **greyscale_pixel_data,
+										uchar **bit_map_data);
 
 	// thread *p_mainThread;
 	// PNM_STATE n_pnmThreadState;
 	// ifstream f_istream;
 	// ofstream f_ostream;
-	// PNM_STATE n_pnmGlobalState;
+	PNM_STATE n_pnmGlobalState;
 };
 
 extern const struct PNM_IO PNM_IO;

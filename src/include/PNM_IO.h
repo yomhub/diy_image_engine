@@ -61,20 +61,20 @@ struct PNM
 		this->width = copyPara->width;
 		this->threshold = copyPara->threshold;
 		this->type = copyPara->type;
-		this->max_value = copyPara->max_value;
+		this->maxValue = copyPara->maxValue;
 	};
 	PNM() {
 		this->threshold = 128;
-		this->max_value = 255;
-		this->magic_number = "";
+		this->maxValue = 255;
+		this->magicNumber = "";
 	};
 	std::string filename;
 	std::uint16_t width;
 	std::uint16_t height;
 	std::uint8_t threshold = 128;
-	std::uint32_t max_value = 255;
+	std::uint32_t maxValue = 255;
 	PNMTYPE type;
-	std::string magic_number = "";
+	std::string magicNumber = "";
 	std::vector<std::uint8_t> data;
 };
 

@@ -102,7 +102,7 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::ReadPGMFile(PNM *f)
         OpenFileStream(f, &f_istream);
         ReadHeader(f, f_istream);
     }
-    if (f->type == NO_TYPE)
+    if (f->type == NO_TYPE || f->type!= PGM_ASCII || f->type != PGM_BINARY)
         return PNM_FILE_FORMAT_ERR;
     ReadPixelData(f, f_istream);
 	f_istream.close();
@@ -116,7 +116,7 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::ReadPPMFile(PNM *f)
         OpenFileStream(f, &f_istream);
         ReadHeader(f, f_istream);
     }
-    if (f->type == NO_TYPE)
+	if (f->type == NO_TYPE || f->type != PPM_ASCII || f->type != PPM_BINARY)
         return PNM_FILE_FORMAT_ERR;
     ReadPixelData(f, f_istream);
 	f_istream.close();
@@ -184,7 +184,7 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::ConvertFormat(PNM *src, PNM *dst, std::vector<
 
 		dst->width = src->width;
 		dst->height = src->height;
-		dst->magic_number = detail::PNMTYPE2MagNum(dst->type);
+		dst->magicNumber = detail::PNMTYPE2MagNum(dst->type);
 		RGB2Greyscale(src->width, src->height, &src->data, &dst->data);
 
 		if (n_pnmGlobalState != PNM_SUCCESS) {
@@ -214,7 +214,7 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::ConvertFormat(PNM *f, PNMTYPE type, std::vecto
 		if (n_pnmGlobalState != PNM_SUCCESS) {
 			buff.swap(f->data);	
 		}
-		f->magic_number = detail::PNMTYPE2MagNum(type);
+		f->magicNumber = detail::PNMTYPE2MagNum(type);
 		
 	}
 	if ((f->type == PPM_ASCII || f->type == PPM_BINARY) &&
@@ -224,7 +224,7 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::ConvertFormat(PNM *f, PNMTYPE type, std::vecto
 		if (n_pnmGlobalState != PNM_SUCCESS) {
 			buff.swap(f->data);
 		}
-		f->magic_number = detail::PNMTYPE2MagNum(type);
+		f->magicNumber = detail::PNMTYPE2MagNum(type);
 	}
     return PNM_SUCCESS;
 }
@@ -300,18 +300,18 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::DeleteTask()
 pnm_io::PNM_STATE pnm_io::PNM_IO::ReadHeader(PNM *f, std::istream &is)
 {
     is.seekg(0, std::ios::beg);
-    is >> f->magic_number >> f->width >> f->height >> f->max_value;
-	f->threshold = f->max_value / 2;
-	f->type = detail::MagNum2PNMTYPE(f->magic_number);
+    is >> f->magicNumber >> f->width >> f->height >> f->maxValue;
+	f->threshold = f->maxValue / 2;
+	f->type = detail::MagNum2PNMTYPE(f->magicNumber);
     
 #ifdef NDEBUG
-    if (!(header.width && header.height && header.max_value))
+    if (!(header.width && header.height && header.maxValue))
     {
         header.type = NO_TYPE;
         return PNM_RT_ERR;
     }
 #endif // NDEBUG
-    myassert(f->width != 0 || f->height != 0 || f->max_value != 0, "Error reading value at pnm_io::PNM_IO::ReadHeader");
+    myassert(f->width != 0 || f->height != 0 || f->maxValue != 0, "Error reading value at pnm_io::PNM_IO::ReadHeader");
     return PNM_SUCCESS;
 }
 
@@ -339,17 +339,17 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::ReadPixelData(PNM *f, std::istream &is)
 
 pnm_io::PNM_STATE pnm_io::PNM_IO::WriteHeader(PNM *f, std::ostream &os)
 {
-    myassert(f->width && f->height && f->max_value, "Write data err");
-    if (f->magic_number.empty())
+    myassert(f->width && f->height && f->maxValue, "Write data err");
+    if (f->magicNumber.empty())
     {
         if (f->type == NO_TYPE)
             return PNM_RT_ERR;
-        f->magic_number = detail::PNMTYPE2MagNum(f->type);
+        f->magicNumber = detail::PNMTYPE2MagNum(f->type);
     }
-    os << f->magic_number << "\n"
+    os << f->magicNumber << "\n"
        << f->width << "\n"
        << f->height << "\n"
-       << f->max_value << "\n"; // Marks beginning of pixel data.
+       << f->maxValue << "\n"; // Marks beginning of pixel data.
     return PNM_SUCCESS;
 }
 
@@ -419,7 +419,7 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::RGB2Greyscale(
     myassert(rgb_pixel_data != nullptr, "null RGB pixel data");
     myassert(rgb_pixel_data->size() >= (width * height) * 3, "RGB pixel have a wrong size");
     myassert(greyscale_pixel_data != nullptr, "null Greyscale pixel data");
-    myassert(greyscale_pixel_data->size() >= (width * height), "Greyscale pixel have a wrong size");
+
     if (greyscale_pixel_data->size() < (width * height))
     {
         greyscale_pixel_data->resize(width * height, std::uint8_t{});
