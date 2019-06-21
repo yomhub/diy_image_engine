@@ -15,10 +15,8 @@
 
 #if defined(_WIN32) || defined(_WIN64)
 #define myfloat std::float_t
-#define mydouble std::double_t
 #else
 #define myfloat float
-#define mydouble double
 #endif
 
 namespace peg{
@@ -52,7 +50,7 @@ struct Pixels
 struct Matrix {
 	std::uint8_t x;
 	std::uint8_t y;
-	std::vector<mydouble> data;
+	std::vector<std::double_t> data;
 };
 
 #ifdef NDEBUG

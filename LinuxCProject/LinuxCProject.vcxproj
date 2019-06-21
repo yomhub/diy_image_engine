@@ -74,12 +74,23 @@
   <ImportGroup Label="Shared" />
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ProjectPublicIncludePath>D:\workspace\charProject\src_c;$(ProjectPublicIncludePath)</ProjectPublicIncludePath>
+    <SourcesToCopyRemotelyOverride>@(SourcesToCopyRemotely);@(DataFilesToCopyRemotely);..\src_c\include\PixelEngine.h;..\src_c\include\PNM_IO.h;</SourcesToCopyRemotelyOverride>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ProjectPublicIncludePath>D:\workspace\charProject\src_c;$(ProjectPublicIncludePath)</ProjectPublicIncludePath>
+  </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\src_c\charProject.cpp" />
     <ClCompile Include="..\src_c\PixelEngine.cpp" />
     <ClCompile Include="..\src_c\PNM_IO.c" />
   </ItemGroup>
-  <ItemDefinitionGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <UndefinePreprocessorDefinitions>_WIN64;_WIN32</UndefinePreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
 </Project>
