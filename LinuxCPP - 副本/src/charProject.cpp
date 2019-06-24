@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+//#include "include/CmdArgsMap.hpp"
+
 #ifdef DEBUG
 
 #include <utils/catch_utils.h>
@@ -16,11 +18,10 @@
 #include "include/PNM_IO.h"
 #include "include/PixelEngine.h"
 
-
 int main(int argc, char **argv)
 {
 	bool b_help = false;
-	std::string s_inputFileName("input.pgm"), s_outputFileName("output,pgm");
+	std::string s_inputFileName("input.pgm"), s_outputFileName("output.pgm");
 	bool b_easypgm = true;
 	bool b_mypgmtoppm = false;
 	myfloat f_R, f_B, f_G;
@@ -52,17 +53,11 @@ int main(int argc, char **argv)
 	;*/
 
 	peg::PixelEngine n_PixelEngine;
-	PNM m_org, m_out;
-	m_org.filename = (char *)s_inputFileName.c_str();
-	m_org.data = NULL;
-	PNM_IO.ReadPNMFile(&m_org,128);
-	m_out.filename = (char *)s_outputFileName.c_str();
-	m_out.width = m_org.width;
-	m_out.height = m_org.height;
-	m_out.maxValue = m_org.maxValue;
-	m_out.threshold = m_org.threshold;
-	m_out.type = m_org.type;
-	m_out.data = NULL;
+	pnm_io::PNM_IO n_pnm;
+	pnm_io::PNM m_org(s_inputFileName);
+
+	n_pnm.ReadPNMFile(&m_org);
+	pnm_io::PNM m_out(s_outputFileName,&m_org);
 	std::vector<std::string> slist = { s_inputFileName ,s_outputFileName };
 
 	if (b_easypgm)
@@ -71,100 +66,94 @@ int main(int argc, char **argv)
 		std::cout << "File :" << m_org.filename << std::endl
 				  << "Width is :" << m_org.width << std::endl
 				  << "Height is :" << m_org.height << std::endl;
-		m_out.data = (u_char*)malloc(sizeof(m_org.data)+1);
-		memcpy(m_out.data,m_org.data,sizeof(m_org.data));
-		
-		PNM_IO.WritePGMFile(&m_out);
+		m_out.data = m_org.data;
+		n_pnm.WritePGMFile(&m_out);
 	}
 	else if (b_mypgmtoppm)
 	{
 		std::vector<myfloat> pa = { 1.0f, 1.0f, 1.0f };
 		// Convert the image into an RGB image and produces a PPM file
-		PNM_IO.Greyscale2RGB(m_org.width,m_org.height,f_R,f_G,f_B, &m_org.data,&m_out.data);
-		PNM_IO.WritePNMFile(&m_out,0);
+		n_pnm.ConvertFormat(&m_org, &m_out, &pa);
+		n_pnm.WritePNMFile(&m_out);
 		//thinks::pnm_io::Greyscale2RGB(m_org.width, m_org.height, f_R, f_G, f_B, &m_out.data, &m_org.data);
 		//thinks::pnm_io::WritePpmImage(m_out.filename, m_out.width, m_out.height, m_out.data.data());
 	}
 	else if (b_mypgmflipV)
 	{
 		// Flip the image vertically and save as OutputFileName PGM file
-		peg::Pixels n_Pixels = {m_org.width, m_org.height, 1, std::vector<std::uint8_t>(m_org.data, m_org.data + sizeof(m_org.data)) };
+		peg::Pixels n_Pixels = {m_org.width, m_org.height, 1, m_org.data};
 		n_PixelEngine.flip(&n_Pixels, 0, 1);
-		m_out.data = n_Pixels.data.data();
-		PNM_IO.WritePGMFile(&m_out);
+		m_out.data = n_Pixels.data;
+		n_pnm.WritePGMFile(&m_out);
 		//thinks::pnm_io::WritePgmImage(m_out.filename, n_Pixels.width, n_Pixels.height, n_Pixels.data.data());
 		//thinks::pnm_io::WritePgmImage(m_out.filename, n_Pixels.width, n_Pixels.height, n_Pixels.data.data());
 	}
 	else if (b_myppmflipH)
 	{
 		// Flip the image horizontally and save as OutputFileName PGM file
-		peg::Pixels n_Pixels = {m_org.width, m_org.height, 1, std::vector<std::uint8_t>(m_org.data, m_org.data + sizeof(m_org.data)) };
+		peg::Pixels n_Pixels = {m_org.width, m_org.height, 1, m_org.data};
 		n_PixelEngine.flip(&n_Pixels, 1, 1);
-		m_out.data = n_Pixels.data.data();
-		PNM_IO.WritePGMFile(&m_out);
+		m_out.data = n_Pixels.data;
+		n_pnm.WritePGMFile(&m_out);
 		//thinks::pnm_io::WritePgmImage(m_out.filename, n_Pixels.width, n_Pixels.height, n_Pixels.data.data());
 	}
 	else if (b_mypgmscale)
 	{
 		// Shrinks or enlarges the image and save as OutputFileName PGM file
-		peg::Pixels n_Pixels = {m_org.width, m_org.height, 1, std::vector<std::uint8_t>(m_org.data, m_org.data + sizeof(m_org.data)) };
+		peg::Pixels n_Pixels = {m_org.width, m_org.height, 1, m_org.data};
 		n_PixelEngine.resize(&n_Pixels, n_Pixels.width * f_scaleFactor, n_Pixels.height * f_scaleFactor, 0);
-		m_out.data = n_Pixels.data.data();
+		m_out.data = n_Pixels.data;
 		m_out.width = n_Pixels.width;
 		m_out.height = n_Pixels.height;
-		PNM_IO.WritePGMFile(&m_out);
+		n_pnm.WritePGMFile(&m_out);
 		//thinks::pnm_io::WritePgmImage(m_out.filename, n_Pixels.width, n_Pixels.height, n_Pixels.data.data());
 	}
 	else if (b_mypgmrotate)
 	{
 		// Rotate the image and save as OutputFileName PGM file.
-		peg::Pixels n_Pixels = {m_org.width, m_org.height, 1, std::vector<std::uint8_t>(m_org.data, m_org.data + sizeof(m_org.data)) };
+		peg::Pixels n_Pixels = {m_org.width, m_org.height, 1, m_org.data};
 		n_PixelEngine.rotate(&n_Pixels, f_angle, 0);
-		m_out.data = n_Pixels.data.data();
+		m_out.data = n_Pixels.data;
 		m_out.width = n_Pixels.width;
 		m_out.height = n_Pixels.height;
-		PNM_IO.WritePGMFile(&m_out);
+		n_pnm.WritePGMFile(&m_out);
 		//thinks::pnm_io::WritePgmImage(m_out.filename, n_Pixels.width, n_Pixels.height, n_Pixels.data.data());
 	}
 	else if (b_mypgmsmooth)
 	{
-		std::string s_name(m_out.filename);
-		std::string s_finName;
+		std::string s_name=m_out.filename;
 		// Flip the image vertically and save as OutputFileName PGM file
-		peg::Pixels n_Pixels = {m_org.width, m_org.height, 1, std::vector<std::uint8_t>(m_org.data, m_org.data + sizeof(m_org.data)) };
+		peg::Pixels n_Pixels = {m_org.width, m_org.height, 1, m_org.data};
 		peg::Matrix n_Matrix = {3,3,
 								{1.0f, 1.0f, 1.0f,
 								 1.0f, 1.0f, 1.0f,
 								 1.0f, 1.0f, 1.0f}};
 		n_PixelEngine.smooth(&n_Pixels, &n_Matrix, 1 / 9.0f);
-		m_out.data = n_Pixels.data.data();
+		m_out.data = n_Pixels.data;
 		m_out.width = n_Pixels.width;
 		m_out.height = n_Pixels.height;
-		s_finName = "Averaging_" + s_name;
-		m_out.filename = (char*)s_finName.c_str();
-		PNM_IO.WritePGMFile(&m_out);
+		m_out.filename = "Averaging_" + s_name;
+		n_pnm.WritePGMFile(&m_out);
 		//thinks::pnm_io::WritePgmImage("Averaging_" + m_out.filename, n_Pixels.width, n_Pixels.height, n_Pixels.data.data());
-		n_Pixels.data = std::vector<std::uint8_t>(m_org.data, m_org.data + sizeof(m_org.data));
+		n_Pixels.data = m_org.data;
 		n_Matrix = {3,3,
 					{1.0f, 1.0f, 1.0f,
 					 1.0f, 2.0f, 1.0f,
 					 1.0f, 1.0f, 1.0f}};
 		n_PixelEngine.smooth(&n_Pixels, &n_Matrix, 1 / 10.0f);
-		m_out.data = n_Pixels.data.data();
+		m_out.data = n_Pixels.data;
 		m_out.width = n_Pixels.width;
 		m_out.height = n_Pixels.height;
-		s_finName = "Averaging_centerEmphasize_" + s_name;
-		m_out.filename = (char*)s_finName.c_str();
-		PNM_IO.WritePGMFile(&m_out);
-		m_out.filename = (char*)s_name.c_str();
+		m_out.filename = "Averaging_centerEmphasize_" + s_name;
+		n_pnm.WritePGMFile(&m_out);
+		m_out.filename = s_name;
 		//thinks::pnm_io::WritePgmImage("Averaging_centerEmphasize_" + m_out.filename, n_Pixels.width, n_Pixels.height, n_Pixels.data.data());
 	}
 	else if (b_mysobel)
 	{
 		// Apply Sobel and Laplacian edge detector and save as OutputFileName PGM file.
-		std::string s_name(m_out.filename);
-		std::string s_finName;
-		peg::Pixels n_Pixels = {m_org.width, m_org.height, 1, std::vector<std::uint8_t>(m_org.data, m_org.data + sizeof(m_org.data)) };
+		std::string s_name = m_out.filename;
+		peg::Pixels n_Pixels = {m_org.width, m_org.height, 1, m_org.data};
 		peg::Matrix n_Matrix1 = {3,3,
 								 {1.0f, 0.0f, -1.0f,
 								  2.0f, 0.0f, -2.0f,
@@ -175,26 +164,24 @@ int main(int argc, char **argv)
 								  -1.0f, -2.0f, -1.0f}};
 		n_PixelEngine.smooth2D(&n_Pixels, &n_Matrix1, &n_Matrix2, 1.0f, 1.0f);
 		//thinks::pnm_io::WritePgmImage("Sobel_" + m_out.filename, n_Pixels.width, n_Pixels.height, n_Pixels.data.data());
-		m_out.data = n_Pixels.data.data();
+		m_out.data = n_Pixels.data;
 		m_out.width = n_Pixels.width;
 		m_out.height = n_Pixels.height;
-		s_finName = "Sobel_" + s_name;
-		m_out.filename = (char*)s_finName.c_str();
-		PNM_IO.WritePGMFile(&m_out);
+		m_out.filename = "Sobel_" + s_name;
+		n_pnm.WritePGMFile(&m_out);
 
-		n_Pixels.data = std::vector<std::uint8_t>(m_org.data, m_org.data + sizeof(m_org.data));
+		n_Pixels.data = m_org.data;
 		n_Matrix1 = {3,3,
 					 {-1.0f, -1.0f, -1.0f,
 					  -1.0f, 8.0f, -1.0f,
 					  -1.0f, -1.0f, -1.0f}};
 		n_PixelEngine.smooth(&n_Pixels, &n_Matrix1, 1 / 10.0f);
-		m_out.data = n_Pixels.data.data();
+		m_out.data = n_Pixels.data;
 		m_out.width = n_Pixels.width;
 		m_out.height = n_Pixels.height;
-		s_finName = "Laplacian_" + s_name;
-		m_out.filename = (char*)s_finName.c_str();
-		PNM_IO.WritePGMFile(&m_out);
-		m_out.filename = (char*)s_name.c_str();
+		m_out.filename = "Laplacian_" + s_name;
+		n_pnm.WritePGMFile(&m_out);
+		m_out.filename = s_name;
 		//thinks::pnm_io::WritePgmImage("Laplacian_" + m_out.filename, n_Pixels.width, n_Pixels.height, n_Pixels.data.data());
 	}
 	else

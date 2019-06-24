@@ -325,11 +325,13 @@ PNM_STATE ReadPixelData(PNM* f, FILE* is)
 	else {
 		n_start = n_size - f->height * f->width;
 	}
-	fseek(is, n_start-1, SEEK_SET);
+	fseek(is, n_start, SEEK_SET);
 
-	if (!f->data || sizeof(f->data) < (n_size - n_start))
-		mymalloc(f->data, n_size - n_start);
-
+	//if (!f->data || sizeof(f->data) < (n_size - n_start))
+	//	mymalloc(f->data, n_size - n_start);
+	char* buffa;
+	buffa = malloc(n_size - n_start);
+	size_t i = sizeof(buffa);
 	if (fread(f->data, n_size - n_start, 1, is) < (n_size - n_start))
 		return PNM_RT_ERR;
 	return PNM_SUCCESS;

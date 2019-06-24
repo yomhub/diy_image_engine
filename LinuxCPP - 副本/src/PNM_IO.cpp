@@ -1,19 +1,17 @@
 #include "include/PNM_IO.h"
-//static void 
+
 //using namespace pnm_io;
 
 pnm_io::PNM_IO::PNM_IO()
 {
     p_mainThread = NULL;
-    state_ = PNM_UNINITIALIZED;
+    n_pnmThreadState = PNM_UNINITIALIZED;
     n_pnmGlobalState = PNM_SUCCESS;
-	n_remainTask = 0;
 }
 
 pnm_io::PNM_IO::~PNM_IO()
 {
-
-	if (p_mainThread || state_ != PNM_UNINITIALIZED) {
+	if (p_mainThread || n_pnmThreadState != PNM_UNINITIALIZED) {
 		DeleteTask();
 	}
     if (f_istream.is_open())
@@ -231,97 +229,71 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::ConvertFormat(PNM *f, PNMTYPE type, std::vecto
     return PNM_SUCCESS;
 }
 
-void pnm_io::PNM_IO::ThreadMain(void(*cbfun)(PNM f), std::vector<std::string> * s_list)
+void pnm_io::PNM_IO::ThreadMain(void(*cbfun)(PNM f), std::vector<std::string> const * s_list)
 {
 	PNM n_pnm;
-	for (std::string s_fName : *s_list) {
-		if (state_ == PNM_PAUSE) {
+	for (auto s_fName : *s_list) {
+		if (n_pnmThreadState == PNM_PAUSE) {
 			while (true)
 			{
-				if (state_ != PNM_PAUSE)break;
+				if (n_pnmThreadState != PNM_PAUSE)break;
 				std::this_thread::sleep_for(std::chrono::seconds(1));
 			}
 		}
 			
-		if (state_ == PNM_WAIT_QUIT)break;
+		if (n_pnmThreadState == PNM_WAIT_QUIT)break;
 		if (s_fName.empty())continue;
 		n_pnm.filename = s_fName;
-		if(ReadPNMFile(&n_pnm)==PNM_SUCCESS)
-			cbfun(n_pnm);
+		ReadPNMFile(&n_pnm);
+		cbfun(n_pnm);
 	}
-
-	state_ = PNM_WAIT_DELETE;
+	delete(&n_pnm);
+	n_pnmThreadState = PNM_WAIT_DELETE;
 }
 
-pnm_io::PNM_STATE pnm_io::PNM_IO::CreateTask(void (*cbfun)(PNM f), std::vector<std::string> * s_list)
+pnm_io::PNM_STATE pnm_io::PNM_IO::CreateTask(void (*cbfun)(PNM f), std::vector<std::string> const * s_list)
 {
-	if (state_ == PNM_WAIT_DELETE) {
+#if defined(_WIN32) || defined(_WIN64)
+
+	if (n_pnmThreadState == PNM_WAIT_DELETE) {
 		delete(p_mainThread);
 		p_mainThread = NULL;
 		return PNM_SUCCESS;
 	}
-	if (state_ != PNM_UNINITIALIZED)return PNM_THREAD_RUNNING;
-
-	//p_mainThread = new std::thread(&PNM_IO::ThreadMain, this, cbfun, s_list);
-
-	p_mainThread = new std::thread([this, cbfun, s_list] {
-		PNM n_pnm;
-		for (auto s_fName : *s_list) {
-			if (state_ == PNM_PAUSE) {
-				while (true)
-				{
-					if (state_ != PNM_PAUSE)break;
-					std::this_thread::sleep_for(std::chrono::seconds(1));
-				}
-			}
-
-			if (state_ == PNM_WAIT_QUIT)break;
-			if (s_fName.empty())continue;
-			n_pnm.filename = s_fName;
-			ReadPNMFile(&n_pnm);
-			cbfun(n_pnm);
-		}
-		state_ = PNM_WAIT_DELETE;
-	});
-
-	//p_mainThread->join();
-	state_ = PNM_THREAD_RUNNING;
-
+	if (n_pnmThreadState != PNM_UNINITIALIZED)return PNM_THREAD_RUNNING;
+	;
+	p_mainThread = &std::thread(&PNM_IO::ThreadMain, this, (void (*)(PNM))cbfun, s_list);
+	n_pnmThreadState = PNM_THREAD_RUNNING;
+	
+#endif //  _WIN32
 	return PNM_SUCCESS;
 }
 
 pnm_io::PNM_STATE pnm_io::PNM_IO::StartTask() {
-	if (state_ != PNM_THREAD_RUNNING)return PNM_UNINITIALIZED;
-	state_ = PNM_THREAD_RUNNING;
+	if (n_pnmThreadState != PNM_THREAD_RUNNING)return PNM_UNINITIALIZED;
+	n_pnmThreadState = PNM_THREAD_RUNNING;
 	return PNM_SUCCESS;
 }
 pnm_io::PNM_STATE pnm_io::PNM_IO::PauseTask()
 {
-	if (state_ != PNM_THREAD_RUNNING)return PNM_UNINITIALIZED;
-	state_ = PNM_PAUSE;
+	if (n_pnmThreadState != PNM_THREAD_RUNNING)return PNM_UNINITIALIZED;
+	n_pnmThreadState = PNM_PAUSE;
 	return PNM_SUCCESS;
 }
 
 pnm_io::PNM_STATE pnm_io::PNM_IO::DeleteTask()
 {
-	// PNM_WAIT_QUIT
-	if (p_mainThread->joinable() && state_ == PNM_WAIT_DELETE) {
-		p_mainThread->join();
+	if (p_mainThread && n_pnmThreadState == PNM_WAIT_DELETE) {
 		delete(p_mainThread);
 		p_mainThread = NULL;
 		return PNM_SUCCESS;
 	}
-	// PNM_UNINITIALIZED
-	else if (state_ != PNM_THREAD_RUNNING)return PNM_UNINITIALIZED;
-	// PNM_THREAD_RUNNING
-	else {
-		state_ = PNM_WAIT_QUIT;
-		if (p_mainThread->joinable())p_mainThread->join();
-		state_ = PNM_UNINITIALIZED;
-		delete(p_mainThread);
-		p_mainThread = NULL;
-	}
-	
+	if (n_pnmThreadState != PNM_THREAD_RUNNING)return PNM_UNINITIALIZED;
+	n_pnmThreadState = PNM_WAIT_QUIT;
+	p_mainThread->join();
+	n_pnmThreadState = PNM_UNINITIALIZED;
+	delete(p_mainThread);
+	p_mainThread = NULL;
 	return PNM_SUCCESS;
 }
 

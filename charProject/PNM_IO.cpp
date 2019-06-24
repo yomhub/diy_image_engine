@@ -6,6 +6,7 @@ pnm_io::PNM_IO::PNM_IO()
 {
     p_mainThread = NULL;
     n_pnmThreadState = PNM_UNINITIALIZED;
+
     n_pnmGlobalState = PNM_SUCCESS;
 }
 

@@ -21,16 +21,34 @@
 #define mydouble double
 #endif
 
+#ifdef CUDA_CODE_COMPILE
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <device_launch_parameters.h>
+#define CUCHECK checkCudaErrors
+#endif // CUDA_CODE_COMPILE
+
 namespace peg{
 
-enum EngineState {
-	ENG_READY=0,
+enum EngineState
+{
+	ENG_READY = 0,
 	ENG_RUNNING,
 	ENG_SLEEP,
 	ENG_SUCCESS,
 	ENG_ERR,
 	ENG_BUSSY,
-	ENG_MEMERY_INSUFFICIENT
+	ENG_MEMERY_INSUFFICIENT,
+
+#ifdef CUDA_CODE_COMPILE
+	ENG_CUDA_NOT_SUPPORT,
+	ENG_CUDA_READY,
+	ENG_CUDA_BUSY,
+	ENG_CUDA_ERR,
+	ENG_CUDA_MEMERY_INSUFFICIENT,
+
+#endif // CUDA_CODE_COMPILE
+
 };
 
 enum ColorSpace {
@@ -64,15 +82,16 @@ struct Matrix {
 #endif // NDEBUG
 
 inline EngineState PixelsInit(Pixels *p) {
-	if (p->data.size() < p->height*p->width*p->sizePerPixel)p->data.resize(p->height*p->width*p->sizePerPixel);
-	if (p->data.size() < p->height*p->width*p->sizePerPixel) return ENG_MEMERY_INSUFFICIENT;
+	if (p->data.size() < p->height * p->width * p->sizePerPixel)p->data.resize(p->height * p->width * p->sizePerPixel);
+	if (p->data.size() < p->height * p->width * p->sizePerPixel) return ENG_MEMERY_INSUFFICIENT;
 	return ENG_SUCCESS;
 }
 
 class PixelEngine
 {
 public:
-	PixelEngine();
+	PixelEngine() :f_state(ENG_READY) {};
+	PixelEngine(EngineState init);
 	~PixelEngine();
 
 	EngineState smooth(Pixels *src, const Matrix * mask, float factor);
@@ -90,6 +109,14 @@ public:
 private:
 	std::vector<Pixels> v_Pixels;
 	EngineState f_state;
+
+#ifdef CUDA_CODE_COMPILE
+	// Only for CUDA
+	EngineState custate_;
+	int device_;
+	cudaDeviceProp prop_;
+#endif // CUDA_CODE_COMPILE
+
 };
 
 }

@@ -11,10 +11,8 @@
 #include <string>
 #include <vector>
 #include <iostream>
-#include <thread>			// std::thread
+#include <thread>
 #include <chrono>
-#include <functional>		// std::function
-#include <atomic>
 
 #if defined(_WIN32) || defined(_WIN64)
 #define myfloat std::float_t
@@ -132,13 +130,11 @@ public:
 	pnm_io::PNM_STATE ConvertFormat(PNM *src, PNM *dst, std::vector<myfloat> const *pa );
 	pnm_io::PNM_STATE ConvertFormat(PNM *f, PNMTYPE type, std::vector<myfloat> const *pa);
 
-	pnm_io::PNM_STATE CreateTask(void (*cbfun)(PNM f), std::vector<std::string> * s_list);
+	pnm_io::PNM_STATE CreateTask(void (*cbfun)(PNM f), std::vector<std::string> const *s_list);
 	pnm_io::PNM_STATE StartTask();
 	pnm_io::PNM_STATE PauseTask();
 	pnm_io::PNM_STATE DeleteTask();
 
-	void ThreadMain(void(*cbfun)(PNM f), std::vector<std::string> * s_list);
-	std::size_t getRemainTaskNum() { return n_remainTask; };
 private:
 	template <typename FileStreamT>
 	inline pnm_io::PNM_STATE
@@ -151,7 +147,8 @@ private:
 
 	pnm_io::PNM_STATE WriteHeader(PNM *f, std::ostream &os);
 	pnm_io::PNM_STATE WritePixelData(PNM *f, std::ostream &os);
-	
+
+	void ThreadMain(void(*cbfun)(PNM f),std::vector<std::string> const * s_list);
 	pnm_io::PNM_STATE Greyscale2RGB(std::size_t const width,
 									 std::size_t const height,
 									 myfloat const fr,
@@ -177,17 +174,11 @@ private:
 										std::vector<std::uint8_t> *const greyscale_pixel_data,
 										std::vector<std::uint8_t> *const bit_map_data);
 private:
-	
+	std::thread *p_mainThread;
+	pnm_io::PNM_STATE n_pnmThreadState;
 	std::ifstream f_istream;
 	std::ofstream f_ostream;
 	pnm_io::PNM_STATE n_pnmGlobalState;
-	//tp::ThreadPool *p_task;
-
-	// For thread
-	std::size_t n_remainTask;
-	std::thread* p_mainThread;
-	std::atomic<pnm_io::PNM_STATE> state_;
-	std::vector<std::string> list_;
 };
 
 } // namespace pnm_io

@@ -99,7 +99,7 @@
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <ProjectPublicIncludePath>../include;</ProjectPublicIncludePath>
+    <ProjectPublicIncludePath>../include;/usr/local/cuda/include</ProjectPublicIncludePath>
     <RemoteTargetPath>$(RemoteOutDir)$(TargetName)$(TargetExt)</RemoteTargetPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|MIPS'">
@@ -108,11 +108,17 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalOptions>-lpthread -fpermissive -m64 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalOptions>-pthread -fpermissive -m64 %(AdditionalOptions)</AdditionalOptions>
       <CppLanguageStandard>c++11</CppLanguageStandard>
       <UndefinePreprocessorDefinitions>_WIN64;_WIN32</UndefinePreprocessorDefinitions>
+      <PreprocessorDefinitions>CUDA_CODE_COMPILE</PreprocessorDefinitions>
     </ClCompile>
     <Link />
+    <Link>
+      <AdditionalOptions>-pthread %(AdditionalOptions)</AdditionalOptions>
+      <SharedLibrarySearchPath>/usr/local/cuda/lib64/;/usr/local/cuda/lib/;%(SharedLibrarySearchPath)</SharedLibrarySearchPath>
+      <AdditionalDependencies>libaccinj64.so;libcudadevrt.a;libcudart_static.a;libcufft_static.a;libcufft_static_nocallback.a;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|MIPS'">
     <ClCompile>

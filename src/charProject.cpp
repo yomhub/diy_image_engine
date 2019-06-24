@@ -18,11 +18,15 @@
 #include "include/PNM_IO.h"
 #include "include/PixelEngine.h"
 
+void test(pnm_io::PNM f) {
+	std::cout << f.height << f.width << std::endl;
+}
+
 int main(int argc, char **argv)
 {
 	bool b_help = false;
 	std::string s_inputFileName("input.pgm"), s_outputFileName("output.pgm");
-	bool b_easypgm = true;
+	bool b_easypgm = false;
 	bool b_mypgmtoppm = false;
 	myfloat f_R, f_B, f_G;
 	f_R = f_B = f_G = 1.0f;
@@ -58,8 +62,9 @@ int main(int argc, char **argv)
 
 	n_pnm.ReadPNMFile(&m_org);
 	pnm_io::PNM m_out(s_outputFileName,&m_org);
-	std::vector<std::string> slist = { s_inputFileName ,s_outputFileName };
-
+	std::vector<std::string> slist = { s_inputFileName};
+	n_pnm.CreateTask(&test,&slist);
+	std::this_thread::sleep_for(std::chrono::seconds(5));
 	if (b_easypgm)
 	{
 		// Print image size and save as OutputFileName PGM file
