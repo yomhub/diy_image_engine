@@ -22,9 +22,7 @@
 #endif
 
 #ifdef CUDA_CODE_COMPILE
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <device_launch_parameters.h>
+#include "CUDA/cuimage.h"
 #define CUCHECK checkCudaErrors
 #endif // CUDA_CODE_COMPILE
 

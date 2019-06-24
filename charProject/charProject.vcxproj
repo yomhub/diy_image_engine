@@ -23,6 +23,9 @@
     <ClCompile Include="..\src\PixelEngine.cpp" />
     <ClCompile Include="..\src\PNM_IO.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\src\include\CUDA\cuimage.cu" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{6A1D3B14-EEEC-4752-A72C-CD9D7815CA24}</ProjectGuid>
@@ -59,6 +62,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.1.props" />
   </ImportGroup>
   <ImportGroup Label="Shared">
   </ImportGroup>
@@ -95,7 +99,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_WINDOWS;%(PreprocessorDefinitions);CUDA_CODE_COMPILE</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\workspace\charProject\thridParty;D:\workspace\charProject\thridParty\catch2;D:\workspace\charProject\thridParty\pnm\include;$(CUDA_PATH)\include;$(CUDA_PATH)\common\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDIR)\src\include;D:\workspace\charProject\thridParty;D:\workspace\charProject\thridParty\catch2;D:\workspace\charProject\thridParty\pnm\include;$(CUDA_PATH)\include;$(CUDA_PATH)\common\inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -112,7 +116,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions);CUDA_CODE_COMPILE</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\workspace\charProject\thridParty;D:\workspace\charProject\thridParty\catch2;D:\workspace\charProject\thridParty\pnm\include;$(CUDA_PATH)\include;$(CUDA_PATH)\common\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDIR)\src\include;D:\workspace\charProject\thridParty;D:\workspace\charProject\thridParty\catch2;D:\workspace\charProject\thridParty\pnm\include;$(CUDA_PATH)\include;$(CUDA_PATH)\common\inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -120,6 +124,9 @@
       <AdditionalLibraryDirectories>$(CUDA_PATH)\lib\$(Platform)</AdditionalLibraryDirectories>
       <AdditionalDependencies>cudadevrt.lib;cudart_static.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <CudaCompile>
+      <TargetMachinePlatform>64</TargetMachinePlatform>
+    </CudaCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -131,7 +138,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);CUDA_CODE_COMPILE</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\workspace\charProject\thridParty;D:\workspace\charProject\thridParty\catch2;D:\workspace\charProject\thridParty\pnm\include;$(CUDA_PATH)\include;$(CUDA_PATH)\common\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDIR)\src\include;D:\workspace\charProject\thridParty;D:\workspace\charProject\thridParty\catch2;D:\workspace\charProject\thridParty\pnm\include;$(CUDA_PATH)\include;$(CUDA_PATH)\common\inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -152,7 +159,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions);CUDA_CODE_COMPILE</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>D:\workspace\charProject\thridParty;D:\workspace\charProject\thridParty\catch2;D:\workspace\charProject\thridParty\pnm\include;$(CUDA_PATH)\include;$(CUDA_PATH)\common\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDIR)\src\include;D:\workspace\charProject\thridParty;D:\workspace\charProject\thridParty\catch2;D:\workspace\charProject\thridParty\pnm\include;$(CUDA_PATH)\include;$(CUDA_PATH)\common\inc</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -165,5 +172,6 @@
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 10.1.targets" />
   </ImportGroup>
 </Project>

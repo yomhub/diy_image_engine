@@ -25,4 +25,9 @@
       <Filter>资源文件</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <CudaCompile Include="..\src\include\CUDA\cuimage.cu">
+      <Filter>资源文件</Filter>
+    </CudaCompile>
+  </ItemGroup>
 </Project>
