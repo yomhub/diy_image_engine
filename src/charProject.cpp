@@ -36,7 +36,7 @@ int main(int argc, char **argv)
 	myfloat f_scaleFactor = 0.5;
 	bool b_mypgmrotate = false;
 	myfloat f_angle = 30.0f;
-	bool b_mypgmsmooth = false;
+	bool b_mypgmsmooth = true;
 	bool b_mysobel = false;
 	/*
 	CmdArgsMap cmdArgs = CmdArgsMap(argc, argv, "--")("help", "Produce help message", &b_help)\
@@ -56,15 +56,15 @@ int main(int argc, char **argv)
 	("mysobel", "--mysobel OutputFileName: Apply Sobel and Laplacian edge detector and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_mysobel)
 	;*/
 
-	peg::PixelEngine n_PixelEngine;
+	peg::PixelEngine n_PixelEngine(peg::ENG_CUDA_READY);
 	pnm_io::PNM_IO n_pnm;
 	pnm_io::PNM m_org(s_inputFileName);
 
 	n_pnm.ReadPNMFile(&m_org);
 	pnm_io::PNM m_out(s_outputFileName,&m_org);
 	std::vector<std::string> slist = { s_inputFileName};
-	n_pnm.CreateTask(&test,&slist);
-	std::this_thread::sleep_for(std::chrono::seconds(5));
+	//n_pnm.CreateTask(&test,&slist);
+
 	if (b_easypgm)
 	{
 		// Print image size and save as OutputFileName PGM file

@@ -31,13 +31,12 @@ PixelEngine::PixelEngine(EngineState init)
 		custate_ = ENG_CUDA_NOT_SUPPORT;
 	}
 	else if(init==ENG_CUDA_READY){
-		std::cout << "初始化 CUDA In PixelEngine" << std::endl;
-		std::cout << "使用GPU device " << device_ << ": " << prop_.name << std::endl;
-		std::cout << "SM的数量：" << prop_.multiProcessorCount << std::endl;
-		//std::cout << "每个线程块的共享内存大小：" << (prop_.sharedMemPerBlock / 1024) << " KB "<< std::endl;
+		std::cout << "Use GPU device:" << device_ << ": " << prop_.name << std::endl;
+		std::cout << "SM Count:" << prop_.multiProcessorCount << std::endl;
+		std::cout << "Shared Memery Per Block:" << (prop_.sharedMemPerBlock / 1024) << " KB "<< std::endl;
 		std::cout << "Max Threads Per Block:" << prop_.maxThreadsPerBlock << std::endl;
 		std::cout << "Max Threads Per Multi Processor:" << prop_.maxThreadsPerMultiProcessor << std::endl;
-		//std::cout << "每个EM的最大线程束数：" << prop_.maxThreadsPerMultiProcessor / 32 << std::endl;
+		std::cout << "Max Threads Bunch:" << prop_.maxThreadsPerMultiProcessor / 32 << std::endl;
 		custate_ = ENG_CUDA_READY;
 	}
 #endif // !NDEBUG
@@ -85,12 +84,8 @@ EngineState PixelEngine::smooth(Pixels *src, const Matrix *mask, float factor)
 	if (device_ != -1 && custate_ == ENG_CUDA_READY) {
 		std::uint8_t *buff,*out;
 		mydouble* m;
-		//(int)prop_.multiProcessorCount;
-		cudaMalloc(&buff, src->height * src->width * src->sizePerPixel);
-		cudaMalloc(&out, src->height * src->width * src->sizePerPixel);
-		cudaMalloc(&m, mask->x * mask->y*sizeof(mydouble));
-		cudaMemcpy(buff, src->data.data(), src->height * src->width * src->sizePerPixel, cudaMemcpyHostToDevice);
-		cudaMemcpy(m, mask->data.data(), mask->x * mask->y * sizeof(mydouble), cudaMemcpyHostToDevice);
+
+		cusmooth(src->data.data(), src->width, src->height, src->sizePerPixel, mask->x , mask->y, mask->data.data(), factor,device_,&prop_);
 
 		f_state = ENG_READY;
 		return ENG_READY;
@@ -455,15 +450,17 @@ EngineState PixelEngine::HOG(
 		f_state = ENG_READY;
 		return ENG_MEMERY_INSUFFICIENT;
 	}
+	// Choose MAX edge in two matrices
 	std::size_t edgeX = mX->x > mY->x ? mX->x : mY->x;
 	std::size_t edgeY = mX->y > mY->y ? mX->y : mY->y;
 	std::size_t hit, subhit;
 	mydouble cx = 0, cy = 0, ori = 0, g = 0;
 	myfloat dorg = 360 / particle;
 	myfloat d2org = dorg / 2;
-	//std::vector<std::double_t> buffx, buffy;
-	startX = startX < src->width - edgeX / 2 ? startX : 0;
-	startY = startY < src->height - edgeY / 2 ? startX : 0;
+	// Check if the selection can accommodate the window
+	startX = startX < (src->width - edgeX / 2) ? startX : 0;
+	startY = startY < (src->height - edgeY / 2) ? startX : 0;
+	// Check if the selection can accommodate the window
 	endX = endX < edgeX / 2 ? edgeX : src->width;
 	endY = endY < edgeY / 2 ? edgeY : src->height;
 
@@ -471,6 +468,7 @@ EngineState PixelEngine::HOG(
 	{
 		for (std::size_t x = startX + edgeX / 2; x < endX - edgeX / 2; x++)
 		{
+			// Calculate single point X gradient value
 			for (std::size_t y1 = 0; y1 < mX->y; y1++)
 			{
 				for (std::size_t x1 = 0; x1 < mX->x; x1++)
@@ -483,7 +481,7 @@ EngineState PixelEngine::HOG(
 				cx /= src->sizePerPixel * mX->x;
 			}
 			cx /= mX->y;
-
+			// Calculate single point Y gradient value
 			for (std::size_t y1 = 0; y1 < mY->y; y1++)
 			{
 				for (std::size_t x1 = 0; x1 < mY->x; x1++)
@@ -496,6 +494,7 @@ EngineState PixelEngine::HOG(
 				cy /= src->sizePerPixel * mY->x;
 			}
 			cy /= mY->y;
+			// Calculate gradient value
 			g = sqrt(cx * cx + cy * cy);
 			ori = atan2(cy, cx) * 180 / 3.14159f + 180;
 			hit = ((std::uint16_t)ori) / ((std::uint16_t)dorg);

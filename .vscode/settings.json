@@ -62,6 +62,7 @@
         "xlocmes": "c",
         "xlocmon": "c",
         "xloctime": "c",
-        "xtree": "c"
+        "xtree": "c",
+        "atomic": "cpp"
     }
 }

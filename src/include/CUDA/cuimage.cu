@@ -1,16 +1,7 @@
 #include "CUDA/cuimage.h"
 
-
-#if defined(_WIN32) || defined(_WIN64)
-#define myfloat std::float_t
-#define mydouble std::double_t
-#else
-#define myfloat float
-#define mydouble double
-#endif
-
-// threadIdx.x=N,threadIdx.y=1 col index
-// blockIdx.x=N,blockIdx.y=1 Row index
+// threadIdx.x=N,threadIdx.y=0 col index
+// blockIdx.x=N,blockIdx.y=0 Row index
 
 __global__  void __cusmooth(std::uint8_t* dst,
 	std::uint16_t width,
@@ -24,48 +15,57 @@ __global__  void __cusmooth(std::uint8_t* dst,
 ) {
 	mydouble* pixelBuff = new mydouble[pixels];
 	
-	size_t x = (mx/2)+threadIdx.x * threadIdx.y * ((width-(mx-1))/blockDim.x);
-	size_t y = (my/2)+blockIdx.x * blockIdx.y * ((height-(my-1))/gridDim.x);
+	size_t x = threadIdx.x * width / blockDim.x;
+	size_t y = blockIdx.x * height / gridDim.x;
 	size_t i, k, dx, dy;
+	
 
-	for (dy=0; dy < ((height-(my-1))/gridDim.x); ++dy)
+	for (dy=0; dy < height / gridDim.x; ++dy)
 	{
-		for (dx=0; dx < ((width-(mx-1))/blockDim.x); ++dx) {
-			for (i = 0; i < pixels; i++)
-			{
-				pixelBuff[i] = 0;
-			}
-			for (k = 0; k < mx * my; k++)
-			{
+		for (dx=0; dx < width / blockDim.x; ++dx) {
+			if (((x + dx) < mx / 2)||((y + dy)< my/2) || ((x + dx) > mx / 2) || ((y + dy) > my / 2)) {
 				for (i = 0; i < pixels; i++)
 				{
-					pixelBuff[i] += src[(x - mx / 2 + k % mx) + (y - my / 2 + k / my) * width] * m[k];
+					dst[x + dx + (y + dy) * width + i] = src[x + dx + (y + dy) * width + i];
 				}
 			}
-			for (i = 0; i < pixels; i++)
-			{
-				dst[x + y * width + i] = pixelBuff[i] * factor;
+			else {
+				for (i = 0; i < pixels; i++)
+				{
+					pixelBuff[i] = 0;
+				}
+				for (k = 0; k < mx * my; k++)
+				{
+					for (i = 0; i < pixels; i++)
+					{
+						pixelBuff[i] += src[(x + dx - mx / 2 + (k / my) % mx) + (y + dy - my / 2 + k / my) * width] * m[k];
+					}
+				}
+				for (i = 0; i < pixels; i++)
+				{
+					dst[x + dx + (y + dy) * width + i] = pixelBuff[i] * factor;
+				}
 			}
 		}
 	}
 }
 
-CUresult cusmooth(std::uint8_t* dst,
+cudaError cusmooth(
+	std::uint8_t* src,
 	std::uint16_t width,
 	std::uint16_t height,
 	std::uint8_t pixels,
-	std::uint8_t* src,
 	std::uint8_t mx,
 	std::uint8_t my,
-	mydouble* msrc,
+	const mydouble* msrc,
 	float factor,
 	int device,
 	cudaDeviceProp *prop_
 ) {
-	CUresult _ret;
-	if(device<=0){
+	cudaError _ret;
+	if(device<0){
 		_ret=cudaGetDevice(&device);
-		if(device<=0)return _ret;
+		if(device<0)return _ret;
 		cudaGetDeviceProperties(prop_, device);
 	}
 	cudaSetDevice(device);
@@ -73,19 +73,45 @@ CUresult cusmooth(std::uint8_t* dst,
 	std::uint8_t *buff,*out;
 	mydouble* m;
 
-	cudaMalloc(&buff, height * width * pixels);
-	cudaMalloc(&out, height * width * pixels);
-	cudaMalloc(&m, mx * my * sizeof(mydouble));
-	cudaMemcpy(buff, src, height * width * sizePerPixel, cudaMemcpyHostToDevice);
-	cudaMemcpy(m, msrc, mx * my * sizeof(mydouble), cudaMemcpyHostToDevice);
+	_ret = cudaMalloc(&buff, height * width * pixels);
+	_ret = cudaMalloc(&out, height * width * pixels);
+	_ret = cudaMalloc(&m, mx * my * sizeof(mydouble));
+	_ret = cudaMemcpy(buff, src, height * width * pixels, cudaMemcpyHostToDevice);
+	_ret = cudaMemcpy(m, msrc, mx * my * sizeof(mydouble), cudaMemcpyHostToDevice);
 
 	// Each block handles integer line 
 	// Each thread handles integer window
-	__cusmooth <<<prop_->multiProcessorCount >= height-(my-1) ? height-(my-1) : prop_->multiProcessorCount, 
-	prop_->maxThreadsPerBlock >= width-(mx-1)  ? width-(mx-1) : prop_.maxThreadsPerBlock >>> (
-		out,src->width, src->height, src->sizePerPixel,buff,mask->x, mask->y, m,factor);
-	cudaMemcpy(src,out,height * width * sizePerPixel, cudaMemcpyDeviceToHost);
-	cudeFree(buff);
-	cudeFree(out);
-	cudeFree(m);
+	__cusmooth << < prop_->multiProcessorCount >= height ? height : prop_->multiProcessorCount,
+		prop_->maxThreadsPerBlock >= width ? width : prop_->maxThreadsPerBlock >> > (
+			out, width, height, pixels, buff, mx, my, m, factor);
+	_ret = cudaDeviceSynchronize();
+	_ret = cudaMemcpy(src,out,height * width * pixels, cudaMemcpyDeviceToHost);
+	cudaFree(buff);
+	cudaFree(out);
+	cudaFree(m);
+	return cudaSuccess;
+}
+
+
+__global__  void __hog(
+	std::uint16_t width, std::uint16_t height, std::uint8_t pixels,
+	std::uint8_t* src,
+	std::uint16_t startX, std::uint16_t startY, 
+	std::uint16_t endX, std::uint16_t endY,
+	std::uint8_t hogx, std::uint8_t hogy,
+	std::uint8_t* hog,
+	std::size_t particle
+) {
+	std::uint8_t* pixelBuff = new mydouble[pixels];
+	
+	size_t x = startX + threadIdx.x * width / blockDim.x;
+	size_t y = startY + blockIdx.x * height / gridDim.x;
+	size_t i, k, dx, dy;
+	
+	for (dy=0; (dy + y)< endY; ++dy)
+	{
+		for (dx=0; (dx + x) < endX; ++dx) {
+			
+		}
+	}
 }
