@@ -1,0 +1,2 @@
+#pragma code_page(65001)
+1 /* CREATEPROCESS_MANIFEST_RESOURCE_ID */ 24 /* RT_MANIFEST */ "D:/workspace/CharProject/out/build/x64-Debug/MakeProject/CMakeFiles/MakeProject.dir/embed.manifest"

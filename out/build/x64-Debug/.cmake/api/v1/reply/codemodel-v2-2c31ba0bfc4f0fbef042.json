@@ -18,14 +18,14 @@
 					"source" : "."
 				},
 				{
-					"build" : "CMakeProject",
+					"build" : "MakeProject",
 					"minimumCMakeVersion" : 
 					{
 						"string" : "3.8"
 					},
 					"parentIndex" : 0,
 					"projectIndex" : 0,
-					"source" : "CMakeProject",
+					"source" : "MakeProject",
 					"targetIndexes" : 
 					[
 						0
@@ -52,9 +52,9 @@
 			[
 				{
 					"directoryIndex" : 1,
-					"id" : "CMakeProject::@a6420b0f4fa00eddc126",
-					"jsonFile" : "target-CMakeProject-Debug-92b53116d50eab73edd6.json",
-					"name" : "CMakeProject",
+					"id" : "CharProject::@553072fee46920e55ddb",
+					"jsonFile" : "target-CharProject-Debug-b1c3669ab19d8d9bde04.json",
+					"name" : "CharProject",
 					"projectIndex" : 0
 				}
 			]
@@ -63,8 +63,8 @@
 	"kind" : "codemodel",
 	"paths" : 
 	{
-		"build" : "D:/workspace/charProject/out/build/x64-Debug",
-		"source" : "D:/workspace/charProject"
+		"build" : "D:/workspace/CharProject/out/build/x64-Debug",
+		"source" : "D:/workspace/CharProject"
 	},
 	"version" : 
 	{

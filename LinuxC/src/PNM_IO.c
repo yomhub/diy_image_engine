@@ -1,25 +1,16 @@
 #include "include/PNM_IO.h"
 
-#define mymalloc(buff, size){		\
-	if (!buff)						\
-	{								\
-		buff = (u_char*)malloc(size);\
-		if (!buff)					\
-		{							\
-			buff = NULL;			\
-			return PNM_MEMERY_INSUFFICIENT;\
-		}							\
-	}								\
-	else if (sizeof(buff) < size)	\
-	{								\
-		if (sizeof(buff))			\
-			free(buff);				\
-		buff = (u_char*)malloc(size);\
-		if (!buff)					\
-			return PNM_MEMERY_INSUFFICIENT;\
-	}}								\
+PNM_STATE mymalloc(uchar** buff,size_t size){
+	if (!size) return PNM_RT_ERR;
+	if(*buff && malloc_usable_size(*buff) < size){
+		free(*buff); *buff = NULL;
+	}
+	*buff = (uchar*)malloc(size);
+	if (!*buff || malloc_usable_size(*buff) < size)return PNM_RT_ERR;
+	return PNM_SUCCESS;
+}
 
-void PNMTYPE2MagNum(u_char* dst, PNMTYPE type) {
+void PNMTYPE2MagNum(uchar* dst, PNMTYPE type) {
 	dst[0] = 'P';
 	switch (type)
 	{
@@ -55,7 +46,17 @@ void PNMTYPE2MagNum(u_char* dst, PNMTYPE type) {
 	}
 }
 #define MagNum2PNMTYPE(magicNum) \
-	magicNum[0] != 'P' ? NO_TYPE : magicNum[1] == '1' ? PBM_ASCII : magicNum[1] == '2' ? PGM_ASCII : magicNum[1] == '3' ? PPM_ASCII : magicNum[1] == '4' ? PBM_ASCII : magicNum[1] == '5' ? PGM_ASCII : magicNum[1] == '6' ? PPM_ASCII : magicNum[1] == '7' ? PAM : magicNum[1] == 'F' ? PFM_RGB : magicNum[1] == 'f' ? PFM_GREYSCALE : NO_TYPE;
+	magicNum[0] != 'P' ? NO_TYPE : \
+	magicNum[1] == '1' ? PBM_ASCII : \
+	magicNum[1] == '2' ? PGM_ASCII : \
+	magicNum[1] == '3' ? PPM_ASCII : \
+	magicNum[1] == '4' ? PBM_BINARY : \
+	magicNum[1] == '5' ? PGM_BINARY : \
+	magicNum[1] == '6' ? PPM_BINARY : \
+	magicNum[1] == '7' ? PAM : \
+	magicNum[1] == 'F' ? PFM_RGB : \
+	magicNum[1] == 'f' ? PFM_GREYSCALE : \
+	NO_TYPE;
 
 #define myassert(expression) \
 	if (!(expression))       \
@@ -94,25 +95,25 @@ PNM_STATE Greyscale2RGB(size_t const width,
 	myfloat const fr,
 	myfloat const fg,
 	myfloat const fb,
-	u_char** greyscale_pixel_data,
-	u_char** rgb_pixel_data);
+	uchar** greyscale_pixel_data,
+	uchar** rgb_pixel_data);
 
 PNM_STATE RGB2Greyscale(size_t const width,
 	size_t const height,
-	u_char** rgb_pixel_data,
-	u_char** greyscale_pixel_data);
+	uchar** rgb_pixel_data,
+	uchar** greyscale_pixel_data);
 
 PNM_STATE BitMap2Greyscale(size_t const width,
 	size_t const height,
 	uint8_t threshold,
-	u_char** bit_map_data,
-	u_char** greyscale_pixel_data);
+	uchar** bit_map_data,
+	uchar** greyscale_pixel_data);
 
 PNM_STATE Greyscale2BitMap(size_t const width,
 	size_t const height,
 	uint16_t threshold,
-	u_char** greyscale_pixel_data,
-	u_char** bit_map_data);
+	uchar** greyscale_pixel_data,
+	uchar** bit_map_data);
 
 PNM_STATE ReadPNMFile(PNM* f, uint16_t const pa)
 {
@@ -142,7 +143,7 @@ PNM_STATE ReadPNMFile(PNM* f, uint16_t const pa)
 PNM_STATE ReadPBMFile(PNM* f, uint16_t const pa)
 {
 	myassert(f->data);
-	u_char* buff;
+	uchar* buff;
 	FILE* pf_read;
 
 	pf_read = fopen(f->filename, "rb");
@@ -154,12 +155,12 @@ PNM_STATE ReadPBMFile(PNM* f, uint16_t const pa)
 		f->type = NO_TYPE;
 		return PNM_FILE_FORMAT_ERR;
 	}
-
+	f->sizePrePixel = 1;
 	size_t n_start, n_size;
 	getFileLen(n_size, pf_read);
 	n_start = n_size - f->height * (f->width / 8 + f->width % 8);
 
-	mymalloc(buff, n_size - n_start);
+	if(mymalloc(&buff, n_size - n_start)!= PNM_SUCCESS)return PNM_RT_ERR;
 
 	if (fread(buff, n_size - n_start, 1, pf_read) < (n_size - n_start)) {
 		free(buff);
@@ -217,7 +218,7 @@ PNM_STATE WritePNMFile(PNM* f, uint16_t const pa)
 	if (!pf_read)return PNM_RT_ERR;
 
 	WriteHeader(f, pf_read);
-	fwrite(f->data, sizeof(f->data), 1, pf_read);
+	fwrite(f->data, malloc_usable_size(f->data), 1, pf_read);
 	fclose(pf_read);
 	return PNM_SUCCESS;
 }
@@ -225,6 +226,7 @@ PNM_STATE WritePNMFile(PNM* f, uint16_t const pa)
 PNM_STATE WritePBMFile(PNM* f, uint16_t const pa)
 {
 	myassert(f->type == PBM_ASCII || f->type == PBM_BINARY);
+	size_t o = malloc_usable_size(f->data);
 	FILE* pf_read;
 	pf_read = fopen(f->filename, "wb");
 	if (!pf_read)return PNM_RT_ERR;
@@ -233,13 +235,13 @@ PNM_STATE WritePBMFile(PNM* f, uint16_t const pa)
 		fclose(pf_read);
 		return PNM_RT_ERR;
 	}
-	u_char* buff;
+	uchar* buff;
 	if (PNM_SUCCESS != Greyscale2BitMap(f->width, f->height, pa, &f->data, &buff)) { 
 		fclose(pf_read);
 		return PNM_MEMERY_INSUFFICIENT; 
 	}
 
-	fwrite(buff,sizeof(buff),1,pf_read);
+	fwrite(buff, malloc_usable_size(buff),1,pf_read);
 
 	fclose(pf_read);
 	return PNM_SUCCESS;
@@ -263,7 +265,7 @@ PNM_STATE WritePPMFile(PNM* f)
 */
 PNM_STATE ReadHeader(PNM* f, FILE* is)
 {
-	u_char buff[20];
+	uchar buff[20];
 	uint16_t n_size;
 	getFileLen(n_size, is);
 
@@ -317,18 +319,20 @@ PNM_STATE ReadPixelData(PNM* f, FILE* is)
 	size_t n_start, n_size;
 	getFileLen(n_size, is);
 	if (f->type == PPM_ASCII || f->type == PPM_BINARY) {
+		f->sizePrePixel = 3;
 		n_start = n_size - 3 * f->height * f->width;
 	}
 	else if (f->type == PBM_ASCII || f->type == PBM_BINARY) {
+		f->sizePrePixel = 1;
 		n_start = n_size - f->height * (f->width / 8 + f->width % 8);
 	}
 	else {
+		f->sizePrePixel = 1;
 		n_start = n_size - f->height * f->width;
 	}
-	fseek(is, n_start-1, SEEK_SET);
+	fseek(is, n_start, SEEK_SET);
 
-	if (!f->data || sizeof(f->data) < (n_size - n_start))
-		mymalloc(f->data, n_size - n_start);
+	if (mymalloc(&f->data, n_size - n_start) != PNM_SUCCESS)return PNM_RT_ERR;
 
 	if (fread(f->data, n_size - n_start, 1, is) < (n_size - n_start))
 		return PNM_RT_ERR;
@@ -346,15 +350,9 @@ PNM_STATE WriteHeader(PNM* f, FILE* os)
 		PNMTYPE2MagNum(f->magicNumber, f->type);
 		
 	}
-	u_char po[1] = { '.' };
-	fwrite(f->magicNumber,2,1,os);
-	fwrite(po, 1, 1, os);
-	fwrite(&f->width, 2, 1, os);
-	fwrite(po, 1, 1, os);
-	fwrite(&f->height, 2, 1, os);
-	fwrite(po, 1, 1, os);
-	fwrite(&f->maxValue, 2, 1, os);
-	fwrite(po, 1, 1, os);
+	uchar buff[50];	
+	sprintf(buff, "%s.%d.%d.%d.", (char*)f->magicNumber, f->width, f->height, f->maxValue);
+	fwrite(buff, strlen(buff), 1, os);
 
 	return PNM_SUCCESS;
 }
@@ -376,12 +374,12 @@ PNM_STATE Greyscale2RGB(
 	myfloat const fr,
 	myfloat const fg,
 	myfloat const fb,
-	u_char** const greyscale_pixel_data,
-	u_char** const rgb_pixel_data)
+	uchar** const greyscale_pixel_data,
+	uchar** const rgb_pixel_data)
 {
 	myassert((*greyscale_pixel_data) != NULL);
-	myassert(sizeof((*greyscale_pixel_data)) >= (width * height));
-	mymalloc(*rgb_pixel_data, width * height * 3);
+
+	if (mymalloc(rgb_pixel_data, width * height * 3) != PNM_SUCCESS)return PNM_RT_ERR;
 
 	for (size_t row = 0; row < height; ++row)
 	{
@@ -405,12 +403,13 @@ Will return PNM_MEMERY_INSUFFICIENT: Not enough memery
 PNM_STATE RGB2Greyscale(
 	size_t const width,
 	size_t const height,
-	u_char** const rgb_pixel_data,
-	u_char** const greyscale_pixel_data)
+	uchar** const rgb_pixel_data,
+	uchar** const greyscale_pixel_data)
 {
 	myassert((*rgb_pixel_data) != NULL);
-	myassert(sizeof((*rgb_pixel_data)) >= (width * height) * 3);
-	mymalloc(*greyscale_pixel_data, width * height);
+	myassert(malloc_usable_size((*rgb_pixel_data)) >= (width * height) * 3);
+
+	if (mymalloc(greyscale_pixel_data, width * height) != PNM_SUCCESS)return PNM_RT_ERR;
 
 	for (size_t row = 0; row < height; ++row)
 	{
@@ -428,14 +427,15 @@ PNM_STATE BitMap2Greyscale(
 	size_t const width,
 	size_t const height,
 	uint8_t threshold,
-	u_char** const bit_map_data,
-	u_char** const greyscale_pixel_data)
+	uchar** const bit_map_data,
+	uchar** const greyscale_pixel_data)
 {
 	myassert(width && height && threshold);
 	myassert((*bit_map_data) != NULL);
-	myassert(sizeof((*bit_map_data)) >= (width * height) / 8);
+	myassert(malloc_usable_size((*bit_map_data)) >= (width * height) / 8);
 	threshold = threshold ? threshold : 128;
-	mymalloc(*greyscale_pixel_data, width * height);
+
+	if (mymalloc(greyscale_pixel_data, width * height) != PNM_SUCCESS)return PNM_RT_ERR;
 
 	for (size_t row = 0; row < height; ++row)
 	{
@@ -456,14 +456,15 @@ PNM_STATE Greyscale2BitMap(
 	size_t const width,
 	size_t const height,
 	uint16_t threshold,
-	u_char** const greyscale_pixel_data,
-	u_char** const bit_map_data)
+	uchar** const greyscale_pixel_data,
+	uchar** const bit_map_data)
 {
 	myassert(width && height && threshold);
 	myassert((*greyscale_pixel_data) != NULL);
-	myassert(sizeof((*greyscale_pixel_data)) >= (width * height) / 8);
+	myassert(malloc_usable_size((*greyscale_pixel_data)) >= (width * height) / 8);
 	threshold = threshold ? threshold : 128;
-	mymalloc(*bit_map_data, width * height);
+
+	if (mymalloc(bit_map_data, width * height) != PNM_SUCCESS)return PNM_RT_ERR;
 
 	for (size_t row = 0; row < height; ++row)
 	{
@@ -488,9 +489,9 @@ const struct pNM_IO PNM_IO = {
     WritePNMFile : WritePNMFile,
     WritePBMFile : WritePBMFile,
     WritePGMFile : WritePGMFile,
-    WritePPMFile : WritePPMFile,
-    RGB2Greyscale : RGB2Greyscale,
-    Greyscale2RGB : Greyscale2RGB,
+    WritePPMFile : WritePPMFile, 
+	Greyscale2RGB : Greyscale2RGB,
+	RGB2Greyscale : RGB2Greyscale,
     BitMap2Greyscale : BitMap2Greyscale,
     Greyscale2BitMap : Greyscale2BitMap,
 	n_pnmGlobalState : PNM_SUCCESS,

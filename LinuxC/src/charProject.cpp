@@ -19,7 +19,7 @@
 int main(int argc, char **argv)
 {
 	bool b_help = false;
-	std::string s_inputFileName("input.pgm"), s_outputFileName("output,pgm");
+	std::string s_inputFileName("input.pgm"), s_outputFileName("output.pgm");
 	bool b_easypgm = true;
 	bool b_mypgmtoppm = false;
 	myfloat f_R, f_B, f_G;
@@ -70,8 +70,9 @@ int main(int argc, char **argv)
 		std::cout << "File :" << m_org.filename << std::endl
 				  << "Width is :" << m_org.width << std::endl
 				  << "Height is :" << m_org.height << std::endl;
-		m_out.data = (u_char*)malloc(sizeof(m_org.data)+1);
-		memcpy(m_out.data,m_org.data,sizeof(m_org.data));
+		m_out.data = (uchar*)malloc(m_org.height*m_org.width*m_org.sizePrePixel);
+
+		memcpy(m_out.data,m_org.data, m_org.height * m_org.width * m_org.sizePrePixel);
 		
 		PNM_IO.WritePGMFile(&m_out);
 	}

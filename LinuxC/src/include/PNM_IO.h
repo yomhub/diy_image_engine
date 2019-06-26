@@ -7,13 +7,14 @@
 #include <stdbool.h> // Bool
 #include <stdlib.h>  // Malloc
 #include <math.h>	// float_t
+#include <malloc.h>
 
 #if defined(_WIN32) || defined(_WIN64)
 #define myfloat std::float_t
 #else
 #define myfloat float_t
 #endif
-#define u_char unsigned char
+#define uchar unsigned char
 
 typedef enum PNM_STATE
 {
@@ -51,10 +52,11 @@ typedef struct PNM
 	uint16_t width;
 	uint16_t height;
 	uint8_t threshold;
+	uint8_t sizePrePixel;
 	uint16_t maxValue;
 	enum PNMTYPE type;
-	u_char magicNumber[2];
-	u_char* data;
+	uchar magicNumber[2];
+	uchar* data;
 } PNM;
 
 
@@ -86,28 +88,28 @@ struct pNM_IO
 	 myfloat const fr,
 	 myfloat const fg,
 	 myfloat const fb,
-	 u_char **greyscale_pixel_data,
-	 u_char **rgb_pixel_data);
+	 uchar **greyscale_pixel_data,
+	 uchar **rgb_pixel_data);
 
 	PNM_STATE (*RGB2Greyscale)
 	(size_t const width,
 	 size_t const height,
-	 u_char **rgb_pixel_data,
-	 u_char **greyscale_pixel_data);
+	 uchar **rgb_pixel_data,
+	 uchar **greyscale_pixel_data);
 
 	PNM_STATE (*BitMap2Greyscale)
 	(size_t const width,
 	 size_t const height,
 	 uint8_t threshold,
-	 u_char **bit_map_data,
-	 u_char **greyscale_pixel_data);
+	 uchar **bit_map_data,
+	 uchar **greyscale_pixel_data);
 
 	PNM_STATE (*Greyscale2BitMap)
 	(size_t const width,
 	 size_t const height,
 	 uint16_t threshold,
-	 u_char **greyscale_pixel_data,
-	 u_char **bit_map_data);
+	 uchar **greyscale_pixel_data,
+	 uchar **bit_map_data);
 
 	// thread *p_mainThread;
 	// PNM_STATE n_pnmThreadState;

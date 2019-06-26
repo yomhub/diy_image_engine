@@ -416,10 +416,10 @@ EngineState PixelEngine::HOG(
 	std::size_t edgeX = mX->x > mY->x ? mX->x : mY->x;
 	std::size_t edgeY = mX->y > mY->y ? mX->y : mY->y;
 	std::size_t hit, subhit;
-	std::double_t cx = 0, cy = 0, ori = 0, g = 0;
+	mydouble cx = 0, cy = 0, ori = 0, g = 0;
 	myfloat dorg = 360 / particle;
 	myfloat d2org = dorg / 2;
-	//std::vector<std::double_t> buffx, buffy;
+	//std::vector<mydouble> buffx, buffy;
 	startX = startX < src->width - edgeX / 2 ? startX : 0;
 	startY = startY < src->height - edgeY / 2 ? startX : 0;
 	endX = endX < edgeX / 2 ? edgeX : src->width;

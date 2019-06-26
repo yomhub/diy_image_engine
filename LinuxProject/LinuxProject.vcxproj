@@ -111,13 +111,13 @@
       <AdditionalOptions>-pthread -fpermissive -m64 %(AdditionalOptions)</AdditionalOptions>
       <CppLanguageStandard>c++11</CppLanguageStandard>
       <UndefinePreprocessorDefinitions>_WIN64;_WIN32</UndefinePreprocessorDefinitions>
-      <PreprocessorDefinitions>CUDA_CODE_COMPILE</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOCUDA_CODE_COMPILE</PreprocessorDefinitions>
     </ClCompile>
     <Link />
     <Link>
       <AdditionalOptions>-pthread %(AdditionalOptions)</AdditionalOptions>
       <SharedLibrarySearchPath>/usr/local/cuda/lib64/;/usr/local/cuda/lib/;%(SharedLibrarySearchPath)</SharedLibrarySearchPath>
-      <AdditionalDependencies>libaccinj64.so;libcudadevrt.a;libcudart_static.a;libcufft_static.a;libcufft_static_nocallback.a;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|MIPS'">

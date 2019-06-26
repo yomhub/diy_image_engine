@@ -1,3 +1,8 @@
 # ninja log v5
-0	811	582530731	CMakeProject/CMakeFiles/CMakeProject.dir/CMakeProject.cpp.obj	4d9f13fbc8d81341
-811	1066	582530732	CMakeProject/CMakeProject.exe	da3a301b6a3029d
+1	1595	583226189	MakeProject/CMakeFiles/MakeProject.dir/MakeProject.cpp.obj	c984cd04db9193fe
+1596	4129	583226192	MakeProject/MakeProject.exe	cc2ea47b82aa5823
+2	137	583226398	build.ninja	48c78a8566fc3907
+7	3083	583226401	MakeProject/CMakeFiles/CharProject.dir/src/PixelEngine.cpp.obj	1efe010a54c1b87a
+0	3292	583226401	MakeProject/CMakeFiles/CharProject.dir/src/charProject.cpp.obj	3dee648da1701ae
+11	3309	583226401	MakeProject/CMakeFiles/CharProject.dir/src/PNM_IO.cpp.obj	90fb585c8d1864bf
+3310	5871	583226404	MakeProject/CharProject.exe	3d68e34591e06f2c

@@ -1,9 +1,9 @@
-CC			 = g++ -Wswitch -Wno-deprecated-declarations -Wempty-body -Wconversion -Wreturn-type -Wparentheses -Wno-pointer-sign -Wno-format -Wunreachable-code -Wunused-function -Wunused-value -Wunused-variable 
+CC= g++ -Wswitch -Wno-deprecated-declarations -Wempty-body -Wconversion -Wreturn-type -Wparentheses -Wno-pointer-sign -Wno-format -Wunreachable-code -Wunused-function -Wunused-value -Wunused-variable 
 VERSION = 0_91
 TARGET = CharP_$(VERSION).out
 
 # -Wall:waring -fopenmp 
-CFLAGS		 = -O0 -std=c++14
+CFLAGS		 = -O0 -std=c++14 -fno-strict-aliasing -g2 -gdwarf-2 -fpermissive
 SRCC		:= $(wildcard ./src/*.c)
 SRCCPP		:= $(wildcard ./src/*.cpp)
 SRC		:= $(SRCC) $(SRCCPP)
