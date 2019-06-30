@@ -1,42 +1,95 @@
-CC= g++ -Wswitch -Wno-deprecated-declarations -Wempty-body -Wconversion -Wreturn-type -Wparentheses -Wno-pointer-sign -Wno-format -Wunreachable-code -Wunused-function -Wunused-value -Wunused-variable 
-VERSION = 0_91
-TARGET = CharP_$(VERSION).out
-CUDA_PATH = /usr/local/cuda/
+#### #######################################################
+#
+# MAKEFILE FOR C/C++ PROJECT
+# Author: swm8023 <swm8023@gmail.com>
+# Date:   2014/01/30
+#
+#### #######################################################
 
-# -Wall:waring -fopenmp 
-SRCC		:= $(wildcard ./src/*.c)
-SRCCPP		:= $(wildcard ./src/*.cpp)
-SRCCU		:= $(wildcard ./src/include/CUDA/*.cu)
-SRC		:= $(SRCC) $(SRCCPP) $(SRCCU)
-OBJC  		:= $(SRCC:	%.c	=$(BUILD)%.o) 
-OBJCPP  	:= $(SRCCPP:	%.cpp	=$(BUILD)%.o) 
-OBJCU		:= $(SRCCU:	%.cu	=$(BUILD)%.o)
-OBJ 		:= $(OBJC) $(OBJCPP) $(OBJCU)
-DEP			:= $(OBJ:%.o=%.d)
-BUILD = ./build/
+.PHONY: all clean
+all: 
 
-NVCC = $(CUDA_PATH)/bin/nvcc
-CUDA_LIBRARY_DIR = $(CUDA_PATH)/lib64/
-CUDA_INCLUDE_DIR = $(CUDA_PATH)/include/
-LDFLAGS 	 = -L$(CUDA_LIBRARY_DIR) -lcudart 
-CFLAGS		 = -O0 -std=c++14 -I$(CUDA_INCLUDE_DIR) -pthread
+# annotation when release version
+DEBUG       := y
+TARGET_PROG := main
 
-$(TARGET):	$(OBJ)
-	$(CC) -o $(TARGET) $(OBJ) $(CFLAGS)
+# project directory	
+DEBUG_DIR   := ./Debug
+RELEASE_DIR := ./Release
+BIN_DIR     := $(if $(DEBUG), $(DEBUG_DIR), $(RELEASE_DIR))
 
--include $(INC_DIR)$(DEP)
+# shell command
+CC    := gcc
+CXX   := g++ -std=c++11 -pthread
+RM    := rm -rf
+MKDIR := mkdir -p
+SED   := sed
+MV    := mv
 
-%.o:	./src/include/CUDA/%.cu Makefile
-	$(NVCC) --cuda -MMD -MP $<
+# init sources & objects & depends
+sources_all := $(shell find . -name "*.c" -o -name "*.cpp" -o -name "*.h")
+sources_c   := $(filter %.c, $(sources_all))
+sources_cpp := $(filter %.cpp, $(sources_all))
+sources_h   := $(filter %.h, $(sources_all))
+objs        := $(addprefix $(BIN_DIR)/,$(strip $(sources_cpp:.cpp=.o) $(sources_c:.c=.o)))
+deps        := $(addprefix $(BIN_DIR)/,$(strip $(sources_cpp:.cpp=.d) $(sources_c:.c=.d)))
 
-%.o:	./src/%.c Makefile
-	$(CC) -c -MMD -MP $< $(CFLAGS)
+# create directory
+$(foreach dirname,$(sort $(dir $(sources_c) $(sources_cpp))),\
+  $(shell $(MKDIR) $(BIN_DIR)/$(dirname)))
 
-%.o:	./src/%.cpp Makefile
-	$(CC) -c -MMD -MP $< $(CFLAGS)
+# complie & link variable
+CFLAGS     := $(if $(DEBUG),-g -O, -O2)
+CFLAGS     += $(addprefix -I ,$(sort $(dir $(sources_h))))
+CXXFLAGS    = $(CFLAGS)
+LDFLAGS    := 
+LOADLIBES  += #-L/usr/include/mysql
+LDLIBS     += #-lpthread -lmysqlclient
 
-clean:
-	rm -f *.o *.d *.a $(TARGET)
+# add vpath
+vpath %.h $(sort $(dir $(sources_h)))
+vpath %.c $(sort $(dir $(sources_c)))
+vpath %.cpp $(sort $(dir $(sources_cpp)))
 
-# vim: set noexpandtab :
+# generate depend files
+# actually generate after object generated, beacasue it only used when next make)
+ifneq "$(MAKECMDGOALS)" "clean"
+sinclude $(deps)
+endif
 
+# make-depend(depend-file,source-file,object-file,cc)
+define make-depend
+  $(RM) $1;                                     \
+  $4 $(CFLAGS) -MM $2 |                         \
+  $(SED) 's,\($(notdir $3)\): ,$3: ,' > $1.tmp; \
+  $(SED) -e 's/#.*//'                           \
+         -e 's/^[^:]*: *//'                     \
+         -e 's/ *\\$$//'                        \
+         -e '/^$$/ d'                           \
+         -e 's/$$/ :/' < $1.tmp >> $1.tmp;      \
+  $(MV) $1.tmp $1;
+endef
+
+# rules to generate objects file
+$(BIN_DIR)/%.o: %.c
+	@$(call make-depend,$(patsubst %.o,%.d,$@),$<,$@,$(CC))
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+$(BIN_DIR)/%.o: %.cpp
+	@$(call make-depend,$(patsubst %.o,%.d,$@),$<,$@,$(CXX))
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
+
+# add-target(target,objs,cc)
+define add-target
+  REAL_TARGET += $(BIN_DIR)/$1
+  $(BIN_DIR)/$1: $2
+	$3 $(LDFLAGS) $$^ $(LOADLIBES) $(LDLIBS) -o $$@
+endef
+
+# call add-target
+$(foreach targ,$(TARGET_PROG),$(eval $(call add-target,$(targ),$(objs),$(CXX))))
+
+all: $(REAL_TARGET) $(TARGET_LIBS)
+
+clean: 
+	$(RM) $(BIN_DIR)

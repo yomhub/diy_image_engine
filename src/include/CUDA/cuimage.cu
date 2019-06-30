@@ -102,7 +102,7 @@ __global__  void __hog(
 	std::uint8_t* hog,
 	std::size_t particle
 ) {
-	std::uint8_t* pixelBuff = new mydouble[pixels];
+	mydouble* pixelBuff = new mydouble[pixels];
 	
 	size_t x = startX + threadIdx.x * width / blockDim.x;
 	size_t y = startY + blockIdx.x * height / gridDim.x;
