@@ -72,10 +72,11 @@ void PNMTYPE2MagNum(uchar* dst, PNMTYPE type) {
 #define clamp(min_value, max_value, value) \
 	value < min_value ? min_value : (value > max_value ? max_value : value);
 
-#define getFileLen(size, pfile) \
-	fseek(pfile, 0, SEEK_END);  \
-	size = ftell(pfile);        \
-	fseek(pfile, 0, SEEK_SET);
+#define getFileLen(size, pfile)			\
+	size_t getFileLenTmp=ftell(pfile);	\
+	fseek(pfile, 0, SEEK_END);			\
+	size = ftell(pfile);				\
+	fseek(pfile, getFileLenTmp, SEEK_SET);
 
 PNM_STATE ReadPNMFile(PNM* f, uint16_t const pa);
 PNM_STATE ReadPBMFile(PNM* f, uint16_t const pa);
@@ -130,7 +131,8 @@ PNM_STATE ReadPNMFile(PNM* f, uint16_t const pa)
 	if (f->type == NO_TYPE)
 		return PNM_FILE_FORMAT_ERR;
 	if (f->type == PBM_ASCII || f->type == PBM_BINARY) {
-		ReadPBMFile(f, pa);
+		fclose(pf_read);
+		return ReadPBMFile(f, pa);
 	}
 	else {
 		ReadPixelData(f, pf_read);
