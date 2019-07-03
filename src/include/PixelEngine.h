@@ -14,6 +14,11 @@
 #include <algorithm>    // std::swap
 #include <stdint.h>
 
+#ifdef CUDA_CODE_COMPILE
+#include "CUDA/cuimage.h"
+#define CUCHECK checkCudaErrors
+#endif // CUDA_CODE_COMPILE
+
 #if defined(_WIN32) || defined(_WIN64)
 #define myfloat std::float_t
 #define mydouble std::double_t
@@ -21,11 +26,6 @@
 #define myfloat float
 #define mydouble double
 #endif
-
-#ifdef CUDA_CODE_COMPILE
-#include "CUDA/cuimage.h"
-#define CUCHECK checkCudaErrors
-#endif // CUDA_CODE_COMPILE
 
 namespace peg{
 
@@ -54,7 +54,6 @@ enum ColorSpace {
 	P_RGBA,
 };
 
-
 struct Pixels
 {
 	std::uint16_t width;
@@ -70,17 +69,9 @@ struct Matrix {
 	std::vector<mydouble> data;
 };
 
-#ifdef NDEBUG
-#define myassert(expression, mes) \
-	if (!(expression))            \
-	return ENG_ERR
-#else
-#define myassert(expression, mes) assert(expression &&mes)
-#endif // NDEBUG
-
-inline EngineState PixelsInit(Pixels *p) {
-	if (p->data.size() < p->height * p->width * p->sizePerPixel)p->data.resize(p->height * p->width * p->sizePerPixel);
-	if (p->data.size() < p->height * p->width * p->sizePerPixel) return ENG_MEMERY_INSUFFICIENT;
+inline EngineState PixelsInit(Pixels &p) {
+	if (p.data.size() < p.height * p.width * p.sizePerPixel)p.data.resize(p.height * p.width * p.sizePerPixel);
+	if (p.data.size() < p.height * p.width * p.sizePerPixel) return ENG_MEMERY_INSUFFICIENT;
 	return ENG_SUCCESS;
 }
 
@@ -91,18 +82,19 @@ public:
 	PixelEngine(EngineState init);
 	~PixelEngine();
 
-	EngineState smooth(Pixels *src, const Matrix * mask, float factor);
-	EngineState smooth2D(Pixels *src, const Matrix * mask1, const Matrix * mask2, float factor1, float factor2);
-	EngineState resize(Pixels *src, std::uint16_t newWidth, std::uint16_t newHeight, std::uint8_t mode);
-	EngineState rotate(Pixels *src, myfloat angle, std::uint8_t mode);
-	EngineState flip(Pixels *src, std::uint8_t mode, std::uint16_t selectLine);
-	EngineState HOG(Pixels const *src, 
-					Pixels *hog, 
-					Matrix * mX, Matrix * mY, 
-					std::uint16_t startX,std::uint16_t startY,
-					std::uint16_t endX,std::uint16_t endY,
+	EngineState smooth(Pixels & src, const Matrix & mask, float factor);
+	EngineState smooth2D(Pixels & src, const Matrix & mask1, const Matrix & mask2, float factor1, float factor2);
+	EngineState resize(Pixels & src, std::uint16_t newWidth, std::uint16_t newHeight, std::uint8_t mode);
+	EngineState rotate(Pixels & src, myfloat angle, std::uint8_t mode);
+	EngineState flip(Pixels & src, std::uint8_t mode, std::uint16_t selectLine);
+	EngineState HOG(Pixels const & src, Pixels & hog, Matrix & mX, Matrix & mY, 
+					std::uint16_t startX,
+					std::uint16_t startY,
+					std::uint16_t endX,
+					std::uint16_t endY,
 					std::size_t particle=9, 
 					bool isWeighted =false);
+
 private:
 	std::vector<Pixels> v_Pixels;
 	EngineState f_state;

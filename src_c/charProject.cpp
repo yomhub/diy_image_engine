@@ -20,7 +20,7 @@ int main(int argc, char **argv)
 {
 	bool b_help = false;
 	std::string s_inputFileName("input.pgm"), s_outputFileName("output.pgm");
-	bool b_easypgm = true;
+	bool b_easypgm = false;
 	bool b_mypgmtoppm = false;
 	myfloat f_R, f_B, f_G;
 	f_R = f_B = f_G = 1.0f;
@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 	myfloat f_scaleFactor = 0.5;
 	bool b_mypgmrotate = false;
 	myfloat f_angle = 30.0f;
-	bool b_mypgmsmooth = false;
+	bool b_mypgmsmooth = true;
 	bool b_mysobel = false;
 	/*
 	CmdArgsMap cmdArgs = CmdArgsMap(argc, argv, "--")("help", "Produce help message", &b_help)\

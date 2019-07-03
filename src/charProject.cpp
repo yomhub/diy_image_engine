@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 {
 	bool b_help = false;
 	std::string s_inputFileName("input.pgm"), s_outputFileName("output.pgm");
-	bool b_easypgm = true;
+	bool b_easypgm = false;
 	bool b_mypgmtoppm = false;
 	myfloat f_R, f_B, f_G;
 	f_R = f_B = f_G = 1.0f;
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 	{
 		// Flip the image vertically and save as OutputFileName PGM file
 		peg::Pixels n_Pixels = {m_org.width, m_org.height, 1, m_org.data};
-		n_PixelEngine.flip(&n_Pixels, 0, 1);
+		n_PixelEngine.flip(n_Pixels, 0, 1);
 		m_out.data = n_Pixels.data;
 		n_pnm.WritePGMFile(&m_out);
 		//thinks::pnm_io::WritePgmImage(m_out.filename, n_Pixels.width, n_Pixels.height, n_Pixels.data.data());
@@ -97,7 +97,7 @@ int main(int argc, char **argv)
 	{
 		// Flip the image horizontally and save as OutputFileName PGM file
 		peg::Pixels n_Pixels = {m_org.width, m_org.height, 1, m_org.data};
-		n_PixelEngine.flip(&n_Pixels, 1, 1);
+		n_PixelEngine.flip(n_Pixels, 1, 1);
 		m_out.data = n_Pixels.data;
 		n_pnm.WritePGMFile(&m_out);
 		//thinks::pnm_io::WritePgmImage(m_out.filename, n_Pixels.width, n_Pixels.height, n_Pixels.data.data());
@@ -106,7 +106,7 @@ int main(int argc, char **argv)
 	{
 		// Shrinks or enlarges the image and save as OutputFileName PGM file
 		peg::Pixels n_Pixels = {m_org.width, m_org.height, 1, m_org.data};
-		n_PixelEngine.resize(&n_Pixels, n_Pixels.width * f_scaleFactor, n_Pixels.height * f_scaleFactor, 0);
+		n_PixelEngine.resize(n_Pixels, n_Pixels.width * f_scaleFactor, n_Pixels.height * f_scaleFactor, 0);
 		m_out.data = n_Pixels.data;
 		m_out.width = n_Pixels.width;
 		m_out.height = n_Pixels.height;
@@ -117,7 +117,7 @@ int main(int argc, char **argv)
 	{
 		// Rotate the image and save as OutputFileName PGM file.
 		peg::Pixels n_Pixels = {m_org.width, m_org.height, 1, m_org.data};
-		n_PixelEngine.rotate(&n_Pixels, f_angle, 0);
+		n_PixelEngine.rotate(n_Pixels, f_angle, 0);
 		m_out.data = n_Pixels.data;
 		m_out.width = n_Pixels.width;
 		m_out.height = n_Pixels.height;
@@ -133,7 +133,7 @@ int main(int argc, char **argv)
 								{1.0f, 1.0f, 1.0f,
 								 1.0f, 1.0f, 1.0f,
 								 1.0f, 1.0f, 1.0f}};
-		n_PixelEngine.smooth(&n_Pixels, &n_Matrix, 1 / 9.0f);
+		n_PixelEngine.smooth(n_Pixels, n_Matrix, 1 / 9.0f);
 		m_out.data = n_Pixels.data;
 		m_out.width = n_Pixels.width;
 		m_out.height = n_Pixels.height;
@@ -145,7 +145,7 @@ int main(int argc, char **argv)
 					{1.0f, 1.0f, 1.0f,
 					 1.0f, 2.0f, 1.0f,
 					 1.0f, 1.0f, 1.0f}};
-		n_PixelEngine.smooth(&n_Pixels, &n_Matrix, 1 / 10.0f);
+		n_PixelEngine.smooth(n_Pixels, n_Matrix, 1 / 10.0f);
 		m_out.data = n_Pixels.data;
 		m_out.width = n_Pixels.width;
 		m_out.height = n_Pixels.height;
@@ -167,7 +167,7 @@ int main(int argc, char **argv)
 								 {1.0f, 2.0f, 1.0f,
 								  0.0f, 0.0f, 0.0f,
 								  -1.0f, -2.0f, -1.0f}};
-		n_PixelEngine.smooth2D(&n_Pixels, &n_Matrix1, &n_Matrix2, 1.0f, 1.0f);
+		n_PixelEngine.smooth2D(n_Pixels, n_Matrix1, n_Matrix2, 1.0f, 1.0f);
 		//thinks::pnm_io::WritePgmImage("Sobel_" + m_out.filename, n_Pixels.width, n_Pixels.height, n_Pixels.data.data());
 		m_out.data = n_Pixels.data;
 		m_out.width = n_Pixels.width;
@@ -180,7 +180,7 @@ int main(int argc, char **argv)
 					 {-1.0f, -1.0f, -1.0f,
 					  -1.0f, 8.0f, -1.0f,
 					  -1.0f, -1.0f, -1.0f}};
-		n_PixelEngine.smooth(&n_Pixels, &n_Matrix1, 1 / 10.0f);
+		n_PixelEngine.smooth(n_Pixels, n_Matrix1, 1 / 10.0f);
 		m_out.data = n_Pixels.data;
 		m_out.width = n_Pixels.width;
 		m_out.height = n_Pixels.height;
