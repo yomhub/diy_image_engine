@@ -1,10 +1,13 @@
 #include "include/PNM_IO.h"
 
+// For q1 && q2 && q3, if q1 is FALSE, the subsequent items will not calculated.
+// For q1 || q2 || q3, if q1 is TRUE, the subsequent items will not calculated.
 PNM_STATE mymalloc(uchar** buff,size_t size){
 	if (!size) return PNM_RT_ERR;
 	if(*buff && malloc_usable_size(*buff) < size){
 		free(*buff); *buff = NULL;
 	}
+	else { return PNM_SUCCESS; }
 	*buff = (uchar*)malloc(size);
 	if (!*buff || malloc_usable_size(*buff) < size)return PNM_RT_ERR;
 	return PNM_SUCCESS;
@@ -45,6 +48,7 @@ void PNMTYPE2MagNum(uchar* dst, PNMTYPE type) {
 		break;
 	}
 }
+
 #define MagNum2PNMTYPE(magicNum) \
 	magicNum[0] != 'P' ? NO_TYPE : \
 	magicNum[1] == '1' ? PBM_ASCII : \
@@ -213,39 +217,49 @@ PNM_STATE ReadPPMFile(PNM* f)
 PNM_STATE WritePNMFile(PNM* f, uint16_t const pa)
 {
 	myassert(f->type != NO_TYPE);
+	myassert(f->data);
 	if (f->type == PBM_ASCII || f->type == PBM_BINARY)return WritePBMFile(f, pa);
 
-	FILE* pf_read;
-	pf_read = fopen(f->filename, "wb");
-	if (!pf_read)return PNM_RT_ERR;
+	FILE* pf_write;
+	pf_write = fopen(f->filename, "wb");
+	if (!pf_write)return PNM_RT_ERR;
 
-	WriteHeader(f, pf_read);
-	fwrite(f->data, malloc_usable_size(f->data), 1, pf_read);
-	fclose(pf_read);
+	if (WriteHeader(f, pf_write) != PNM_SUCCESS)return PNM_RT_ERR;
+
+	if (fwrite(f->data, malloc_usable_size(f->data), 1, pf_write) < malloc_usable_size(f->data)) {
+		fclose(pf_write);
+		return PNM_RT_ERR;
+	}
+	
+	fclose(pf_write);
 	return PNM_SUCCESS;
 }
 
 PNM_STATE WritePBMFile(PNM* f, uint16_t const pa)
 {
+	myassert(f->data);
 	myassert(f->type == PBM_ASCII || f->type == PBM_BINARY);
 	size_t o = malloc_usable_size(f->data);
-	FILE* pf_read;
-	pf_read = fopen(f->filename, "wb");
-	if (!pf_read)return PNM_RT_ERR;
+	FILE* pf_write;
+	pf_write = fopen(f->filename, "wb");
+	if (!pf_write)return PNM_RT_ERR;
 
-	if (WriteHeader(f, pf_read) != PNM_SUCCESS) {
-		fclose(pf_read);
+	if (WriteHeader(f, pf_write) != PNM_SUCCESS) {
+		fclose(pf_write);
 		return PNM_RT_ERR;
 	}
 	uchar* buff;
 	if (PNM_SUCCESS != Greyscale2BitMap(f->width, f->height, pa, &f->data, &buff)) { 
-		fclose(pf_read);
+		fclose(pf_write);
 		return PNM_MEMERY_INSUFFICIENT; 
 	}
 
-	fwrite(buff, malloc_usable_size(buff),1,pf_read);
+	if (fwrite(f->data, malloc_usable_size(f->data), 1, pf_write) < malloc_usable_size(f->data)) {
+		fclose(pf_write);
+		return PNM_RT_ERR;
+	}
 
-	fclose(pf_read);
+	fclose(pf_write);
 	return PNM_SUCCESS;
 }
 
@@ -281,8 +295,10 @@ PNM_STATE ReadHeader(PNM* f, FILE* is)
 	uint8_t s = 0, e = 0, i = 0;
 	bool ishit = false;
 	while (n_size > (0 + sizeof(buff))) {
-
-		fread(buff, sizeof(buff), 1, is);
+		while (s< sizeof(buff) && buff[s]!='\n') {
+			fread(buff, 1, 1, is);
+			s++;
+		}
 		sscanf((const char*)buff, "%d.%d.%d", &f->width, &f->height, &f->maxValue);
 		if (f->width == 0 || f->height == 0 || f->maxValue == 0) {
 			sscanf((const char*)buff, "%d %d %d", &f->width, &f->height, &f->maxValue);
@@ -302,13 +318,13 @@ PNM_STATE ReadHeader(PNM* f, FILE* is)
 	f->threshold = f->maxValue / 2;
 
 #ifdef NDEBUG
-	if (!(header.width && header.height && header.max_value))
+	if (!(f->width != 0 && f->width < 65525 && f->height != 0 && f->height < 65525 && f->maxValue != 0 && f->maxValue <= 255))
 	{
-		header.type = NO_TYPE;
+		f->type = NO_TYPE;	//Have to clean f->type so cant use assert.
 		return PNM_RT_ERR;
 	}
 #endif // NDEBUG
-	myassert(f->width != 0 || f->height != 0 || f->maxValue != 0);
+	myassert(f->width != 0 && f->width < 65525 && f->height != 0 && f->height < 65525 && f->maxValue != 0 && f->maxValue <= 255);
 	f->type = MagNum2PNMTYPE(f->magicNumber);
 	return PNM_SUCCESS;
 }
@@ -354,7 +370,7 @@ PNM_STATE WriteHeader(PNM* f, FILE* os)
 	}
 	uchar buff[50];	
 	sprintf(buff, "%s.%d.%d.%d.", (char*)f->magicNumber, f->width, f->height, f->maxValue);
-	fwrite(buff, strlen(buff), 1, os);
+	if (fwrite(buff, strlen(buff), 1, os) < strlen(buff))return PNM_RT_ERR;
 
 	return PNM_SUCCESS;
 }
