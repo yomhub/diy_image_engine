@@ -294,20 +294,25 @@ PNM_STATE ReadHeader(PNM* f, FILE* is)
 
 	uint8_t s = 0, e = 0, i = 0;
 	bool ishit = false;
-	while (n_size > (0 + sizeof(buff))) {
+	while (n_size > (0 + sizeof(buff)) && (f->width==0 || f->height==0) ) {
 		while (s< sizeof(buff) && buff[s]!='\n') {
 			fread(buff, 1, 1, is);
-			s++;
+			s++; n_size -= 1;
 		}
-		sscanf((const char*)buff, "%d.%d.%d", &f->width, &f->height, &f->maxValue);
+		sscanf((const char*)buff, "%d.%d", &f->width, &f->height);
 		if (f->width == 0 || f->height == 0 || f->maxValue == 0) {
-			sscanf((const char*)buff, "%d %d %d", &f->width, &f->height, &f->maxValue);
+			sscanf((const char*)buff, "%d %d", &f->width, &f->height);
 		}
-		if (f->width == 0 || f->height == 0 || f->maxValue == 0) {
-			n_size -= sizeof(buff);
-			continue;
+	}
+	while (n_size > (0 + sizeof(buff)) && f->maxValue==0) {
+		while (s < sizeof(buff) && buff[s] != '\n') {
+			fread(buff, 1, 1, is);
+			s++; n_size -= 1;
 		}
-		else break;
+		sscanf((const char*)buff, "%d", &f->maxValue);
+		if (f->maxValue == 0) {
+			sscanf((const char*)buff, "%d", &f->maxValue);
+		}
 	}
 	if (n_size <= (0 + sizeof(buff))) {
 		f->width = f->height = f->maxValue = 0;
@@ -369,7 +374,7 @@ PNM_STATE WriteHeader(PNM* f, FILE* os)
 		
 	}
 	uchar buff[50];	
-	sprintf(buff, "%s.%d.%d.%d.", (char*)f->magicNumber, f->width, f->height, f->maxValue);
+	sprintf(buff, "%s\n%d %d\n%d\n", (char*)f->magicNumber, f->width, f->height, f->maxValue);
 	if (fwrite(buff, strlen(buff), 1, os) < strlen(buff))return PNM_RT_ERR;
 
 	return PNM_SUCCESS;

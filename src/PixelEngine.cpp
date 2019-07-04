@@ -8,48 +8,131 @@
 #define myassert(expression, mes) assert(expression &&mes)
 #endif // NDEBUG
 
-#ifdef LOW_ACCURACY
-std::uint8_t  sine_wave[256] = {
-  0x80, 0x83, 0x86, 0x89, 0x8C, 0x90, 0x93, 0x96,
-  0x99, 0x9C, 0x9F, 0xA2, 0xA5, 0xA8, 0xAB, 0xAE,
-  0xB1, 0xB3, 0xB6, 0xB9, 0xBC, 0xBF, 0xC1, 0xC4,
-  0xC7, 0xC9, 0xCC, 0xCE, 0xD1, 0xD3, 0xD5, 0xD8,
-  0xDA, 0xDC, 0xDE, 0xE0, 0xE2, 0xE4, 0xE6, 0xE8,
-  0xEA, 0xEB, 0xED, 0xEF, 0xF0, 0xF1, 0xF3, 0xF4,
-  0xF5, 0xF6, 0xF8, 0xF9, 0xFA, 0xFA, 0xFB, 0xFC,
-  0xFD, 0xFD, 0xFE, 0xFE, 0xFE, 0xFF, 0xFF, 0xFF,
-  0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0xFE, 0xFE, 0xFD,
-  0xFD, 0xFC, 0xFB, 0xFA, 0xFA, 0xF9, 0xF8, 0xF6,
-  0xF5, 0xF4, 0xF3, 0xF1, 0xF0, 0xEF, 0xED, 0xEB,
-  0xEA, 0xE8, 0xE6, 0xE4, 0xE2, 0xE0, 0xDE, 0xDC,
-  0xDA, 0xD8, 0xD5, 0xD3, 0xD1, 0xCE, 0xCC, 0xC9,
-  0xC7, 0xC4, 0xC1, 0xBF, 0xBC, 0xB9, 0xB6, 0xB3,
-  0xB1, 0xAE, 0xAB, 0xA8, 0xA5, 0xA2, 0x9F, 0x9C,
-  0x99, 0x96, 0x93, 0x90, 0x8C, 0x89, 0x86, 0x83,
-  0x80, 0x7D, 0x7A, 0x77, 0x74, 0x70, 0x6D, 0x6A,
-  0x67, 0x64, 0x61, 0x5E, 0x5B, 0x58, 0x55, 0x52,
-  0x4F, 0x4D, 0x4A, 0x47, 0x44, 0x41, 0x3F, 0x3C,
-  0x39, 0x37, 0x34, 0x32, 0x2F, 0x2D, 0x2B, 0x28,
-  0x26, 0x24, 0x22, 0x20, 0x1E, 0x1C, 0x1A, 0x18,
-  0x16, 0x15, 0x13, 0x11, 0x10, 0x0F, 0x0D, 0x0C,
-  0x0B, 0x0A, 0x08, 0x07, 0x06, 0x06, 0x05, 0x04,
-  0x03, 0x03, 0x02, 0x02, 0x02, 0x01, 0x01, 0x01,
-  0x01, 0x01, 0x01, 0x01, 0x02, 0x02, 0x02, 0x03,
-  0x03, 0x04, 0x05, 0x06, 0x06, 0x07, 0x08, 0x0A,
-  0x0B, 0x0C, 0x0D, 0x0F, 0x10, 0x11, 0x13, 0x15,
-  0x16, 0x18, 0x1A, 0x1C, 0x1E, 0x20, 0x22, 0x24,
-  0x26, 0x28, 0x2B, 0x2D, 0x2F, 0x32, 0x34, 0x37,
-  0x39, 0x3C, 0x3F, 0x41, 0x44, 0x47, 0x4A, 0x4D,
-  0x4F, 0x52, 0x55, 0x58, 0x5B, 0x5E, 0x61, 0x64,
-  0x67, 0x6A, 0x6D, 0x70, 0x74, 0x77, 0x7A, 0x7D
+#ifndef LOW_ACCURACY
+const myfloat sinLookup[360] = {
+0.0f,
+0.0174524f, 0.0348995f, 0.052336f, 0.0697565f, 0.0871557f, 0.104528f, 0.121869f, 0.139173f, 0.156434f, 0.173648f,
+0.190809f, 0.207912f, 0.224951f, 0.241922f, 0.258819f, 0.275637f, 0.292372f, 0.309017f, 0.325568f, 0.34202f,
+0.358368f, 0.374607f, 0.390731f, 0.406737f, 0.422618f, 0.438371f, 0.45399f, 0.469472f, 0.48481f, 0.5f,
+0.515038f, 0.529919f, 0.544639f, 0.559193f, 0.573576f, 0.587785f, 0.601815f, 0.615662f, 0.62932f, 0.642788f,
+0.656059f, 0.669131f, 0.681998f, 0.694658f, 0.707107f, 0.71934f, 0.731354f, 0.743145f, 0.75471f, 0.766044f,
+0.777146f, 0.788011f, 0.798635f, 0.809017f, 0.819152f, 0.829038f, 0.838671f, 0.848048f, 0.857167f, 0.866025f,
+0.87462f, 0.882948f, 0.891007f, 0.898794f, 0.906308f, 0.913545f, 0.920505f, 0.927184f, 0.93358f, 0.939693f,
+0.945519f, 0.951057f, 0.956305f, 0.961262f, 0.965926f, 0.970296f, 0.97437f, 0.978148f, 0.981627f, 0.984808f,
+0.987688f, 0.990268f, 0.992546f, 0.994522f, 0.996195f, 0.997564f, 0.99863f, 0.999391f, 0.999848f, 1.0f,
+0.999848f, 0.999391f, 0.99863f, 0.997564f, 0.996195f, 0.994522f, 0.992546f, 0.990268f, 0.987688f, 0.984808f,
+0.981627f, 0.978148f, 0.97437f, 0.970296f, 0.965926f, 0.961262f, 0.956305f, 0.951057f, 0.945519f, 0.939693f,
+0.93358f, 0.927184f, 0.920505f, 0.913545f, 0.906308f, 0.898794f, 0.891007f, 0.882948f, 0.87462f, 0.866025f,
+0.857167f, 0.848048f, 0.838671f, 0.829038f, 0.819152f, 0.809017f, 0.798635f, 0.788011f, 0.777146f, 0.766044f,
+0.75471f, 0.743145f, 0.731354f, 0.71934f, 0.707107f, 0.694658f, 0.681998f, 0.669131f, 0.656059f, 0.642788f,
+0.62932f, 0.615662f, 0.601815f, 0.587785f, 0.573576f, 0.559193f, 0.544639f, 0.529919f, 0.515038f, 0.5f,
+0.48481f, 0.469472f, 0.45399f, 0.438371f, 0.422618f, 0.406737f, 0.390731f, 0.374607f, 0.358368f, 0.34202f,
+0.325568f, 0.309017f, 0.292372f, 0.275637f, 0.258819f, 0.241922f, 0.224951f, 0.207912f, 0.190809f, 0.173648f,
+0.156434f, 0.139173f, 0.121869f, 0.104528f, 0.0871557f, 0.0697565f, 0.052336f, 0.0348995f, 0.0174524f, 3.58979e-09f,
+-0.0174524f, -0.0348995f, -0.052336f, -0.0697565f, -0.0871557f, -0.104528f, -0.121869f, -0.139173f, -0.156434f, -0.173648f,
+-0.190809f, -0.207912f, -0.224951f, -0.241922f, -0.258819f, -0.275637f, -0.292372f, -0.309017f, -0.325568f, -0.34202f,
+-0.358368f, -0.374607f, -0.390731f, -0.406737f, -0.422618f, -0.438371f, -0.45399f, -0.469472f, -0.48481f, -0.5f,
+-0.515038f, -0.529919f, -0.544639f, -0.559193f, -0.573576f, -0.587785f, -0.601815f, -0.615661f, -0.62932f, -0.642788f,
+-0.656059f, -0.669131f, -0.681998f, -0.694658f, -0.707107f, -0.71934f, -0.731354f, -0.743145f, -0.75471f, -0.766044f,
+-0.777146f, -0.788011f, -0.798635f, -0.809017f, -0.819152f, -0.829038f, -0.838671f, -0.848048f, -0.857167f, -0.866025f,
+-0.87462f, -0.882948f, -0.891007f, -0.898794f, -0.906308f, -0.913545f, -0.920505f, -0.927184f, -0.93358f, -0.939693f,
+-0.945519f, -0.951057f, -0.956305f, -0.961262f, -0.965926f, -0.970296f, -0.97437f, -0.978148f, -0.981627f, -0.984808f,
+-0.987688f, -0.990268f, -0.992546f, -0.994522f, -0.996195f, -0.997564f, -0.99863f, -0.999391f, -0.999848f, -1.0f,
+-0.999848f, -0.999391f, -0.99863f, -0.997564f, -0.996195f, -0.994522f, -0.992546f, -0.990268f, -0.987688f, -0.984808f,
+-0.981627f, -0.978148f, -0.97437f, -0.970296f, -0.965926f, -0.961262f, -0.956305f, -0.951057f, -0.945519f, -0.939693f,
+-0.93358f, -0.927184f, -0.920505f, -0.913545f, -0.906308f, -0.898794f, -0.891007f, -0.882948f, -0.87462f, -0.866025f,
+-0.857167f, -0.848048f, -0.838671f, -0.829038f, -0.819152f, -0.809017f, -0.798636f, -0.788011f, -0.777146f, -0.766044f,
+-0.75471f, -0.743145f, -0.731354f, -0.71934f, -0.707107f, -0.694658f, -0.681998f, -0.669131f, -0.656059f, -0.642788f,
+-0.62932f, -0.615662f, -0.601815f, -0.587785f, -0.573576f, -0.559193f, -0.544639f, -0.529919f, -0.515038f, -0.5f,
+-0.48481f, -0.469472f, -0.453991f, -0.438371f, -0.422618f, -0.406737f, -0.390731f, -0.374607f, -0.358368f, -0.34202f,
+-0.325568f, -0.309017f, -0.292372f, -0.275637f, -0.258819f, -0.241922f, -0.224951f, -0.207912f, -0.190809f, -0.173648f,
+-0.156434f, -0.139173f, -0.121869f, -0.104528f, -0.0871558f, -0.0697565f, -0.052336f, -0.0348995f, -0.0174524f,
 };
-#define mycos(x) 
-#define mysin(x) 
-#define mytan(x) 
+const myfloat cosLookup[360] = {
+1.0f,
+0.999848f, 0.999391f, 0.99863f, 0.997564f, 0.996195f, 0.994522f, 0.992546f, 0.990268f, 0.987688f, 0.984808f,
+0.981627f, 0.978148f, 0.97437f, 0.970296f, 0.965926f, 0.961262f, 0.956305f, 0.951057f, 0.945519f, 0.939693f,
+0.93358f, 0.927184f, 0.920505f, 0.913545f, 0.906308f, 0.898794f, 0.891007f, 0.882948f, 0.87462f, 0.866025f,
+0.857167f, 0.848048f, 0.838671f, 0.829038f, 0.819152f, 0.809017f, 0.798635f, 0.788011f, 0.777146f, 0.766044f,
+0.75471f, 0.743145f, 0.731354f, 0.71934f, 0.707107f, 0.694658f, 0.681998f, 0.669131f, 0.656059f, 0.642788f,
+0.62932f, 0.615662f, 0.601815f, 0.587785f, 0.573576f, 0.559193f, 0.544639f, 0.529919f, 0.515038f, 0.5f,
+0.48481f, 0.469472f, 0.45399f, 0.438371f, 0.422618f, 0.406737f, 0.390731f, 0.374607f, 0.358368f, 0.34202f,
+0.325568f, 0.309017f, 0.292372f, 0.275637f, 0.258819f, 0.241922f, 0.224951f, 0.207912f, 0.190809f, 0.173648f,
+0.156434f, 0.139173f, 0.121869f, 0.104528f, 0.0871557f, 0.0697565f, 0.052336f, 0.0348995f, 0.0174524f, 1.7949e-09f,
+-0.0174524f, -0.0348995f, -0.052336f, -0.0697565f, -0.0871557f, -0.104528f, -0.121869f, -0.139173f, -0.156434f, -0.173648f,
+-0.190809f, -0.207912f, -0.224951f, -0.241922f, -0.258819f, -0.275637f, -0.292372f, -0.309017f, -0.325568f, -0.34202f,
+-0.358368f, -0.374607f, -0.390731f, -0.406737f, -0.422618f, -0.438371f, -0.45399f, -0.469472f, -0.48481f, -0.5f,
+-0.515038f, -0.529919f, -0.544639f, -0.559193f, -0.573576f, -0.587785f, -0.601815f, -0.615662f, -0.62932f, -0.642788f,
+-0.656059f, -0.669131f, -0.681998f, -0.694658f, -0.707107f, -0.71934f, -0.731354f, -0.743145f, -0.75471f, -0.766044f,
+-0.777146f, -0.788011f, -0.798635f, -0.809017f, -0.819152f, -0.829038f, -0.838671f, -0.848048f, -0.857167f, -0.866025f,
+-0.87462f, -0.882948f, -0.891007f, -0.898794f, -0.906308f, -0.913545f, -0.920505f, -0.927184f, -0.93358f, -0.939693f,
+-0.945519f, -0.951057f, -0.956305f, -0.961262f, -0.965926f, -0.970296f, -0.97437f, -0.978148f, -0.981627f, -0.984808f,
+-0.987688f, -0.990268f, -0.992546f, -0.994522f, -0.996195f, -0.997564f, -0.99863f, -0.999391f, -0.999848f, -1.0f,
+-0.999848f, -0.999391f, -0.99863f, -0.997564f, -0.996195f, -0.994522f, -0.992546f, -0.990268f, -0.987688f, -0.984808f,
+-0.981627f, -0.978148f, -0.97437f, -0.970296f, -0.965926f, -0.961262f, -0.956305f, -0.951057f, -0.945519f, -0.939693f,
+-0.93358f, -0.927184f, -0.920505f, -0.913545f, -0.906308f, -0.898794f, -0.891007f, -0.882948f, -0.87462f, -0.866025f,
+-0.857167f, -0.848048f, -0.838671f, -0.829038f, -0.819152f, -0.809017f, -0.798636f, -0.788011f, -0.777146f, -0.766044f,
+-0.75471f, -0.743145f, -0.731354f, -0.71934f, -0.707107f, -0.694658f, -0.681998f, -0.669131f, -0.656059f, -0.642788f,
+-0.62932f, -0.615662f, -0.601815f, -0.587785f, -0.573576f, -0.559193f, -0.544639f, -0.529919f, -0.515038f, -0.5f,
+-0.48481f, -0.469472f, -0.45399f, -0.438371f, -0.422618f, -0.406737f, -0.390731f, -0.374607f, -0.358368f, -0.34202f,
+-0.325568f, -0.309017f, -0.292372f, -0.275637f, -0.258819f, -0.241922f, -0.224951f, -0.207912f, -0.190809f, -0.173648f,
+-0.156434f, -0.139173f, -0.121869f, -0.104528f, -0.0871557f, -0.0697565f, -0.052336f, -0.0348995f, -0.0174524f, -5.38469e-09f,
+0.0174524f, 0.0348995f, 0.052336f, 0.0697565f, 0.0871557f, 0.104528f, 0.121869f, 0.139173f, 0.156434f, 0.173648f,
+0.190809f, 0.207912f, 0.224951f, 0.241922f, 0.258819f, 0.275637f, 0.292372f, 0.309017f, 0.325568f, 0.34202f,
+0.358368f, 0.374607f, 0.390731f, 0.406737f, 0.422618f, 0.438371f, 0.45399f, 0.469472f, 0.48481f, 0.5f,
+0.515038f, 0.529919f, 0.544639f, 0.559193f, 0.573576f, 0.587785f, 0.601815f, 0.615661f, 0.62932f, 0.642788f,
+0.656059f, 0.669131f, 0.681998f, 0.694658f, 0.707107f, 0.71934f, 0.731354f, 0.743145f, 0.75471f, 0.766044f,
+0.777146f, 0.788011f, 0.798635f, 0.809017f, 0.819152f, 0.829038f, 0.838671f, 0.848048f, 0.857167f, 0.866025f,
+0.87462f, 0.882948f, 0.891007f, 0.898794f, 0.906308f, 0.913545f, 0.920505f, 0.927184f, 0.93358f, 0.939693f,
+0.945519f, 0.951057f, 0.956305f, 0.961262f, 0.965926f, 0.970296f, 0.97437f, 0.978148f, 0.981627f, 0.984808f,
+0.987688f, 0.990268f, 0.992546f, 0.994522f, 0.996195f, 0.997564f, 0.99863f, 0.999391f, 0.999848f
+};
+const myfloat tanLookup[360] = {
+0.0f,
+0.0174551f, 0.0349208f, 0.0524078f, 0.0699268f, 0.0874887f, 0.105104f, 0.122785f, 0.140541f, 0.158384f, 0.176327f,
+0.19438f, 0.212557f, 0.230868f, 0.249328f, 0.267949f, 0.286745f, 0.305731f, 0.32492f, 0.344328f, 0.36397f,
+0.383864f, 0.404026f, 0.424475f, 0.445229f, 0.466308f, 0.487733f, 0.509525f, 0.531709f, 0.554309f, 0.57735f,
+0.600861f, 0.624869f, 0.649408f, 0.674509f, 0.700208f, 0.726543f, 0.753554f, 0.781286f, 0.809784f, 0.8391f,
+0.869287f, 0.900404f, 0.932515f, 0.965689f, 1.0f, 1.03553f, 1.07237f, 1.11061f, 1.15037f, 1.19175f,
+1.2349f, 1.27994f, 1.32704f, 1.37638f, 1.42815f, 1.48256f, 1.53987f, 1.60033f, 1.66428f, 1.73205f,
+1.80405f, 1.88073f, 1.96261f, 2.0503f, 2.14451f, 2.24604f, 2.35585f, 2.47509f, 2.60509f, 2.74748f,
+2.90421f, 3.07768f, 3.27085f, 3.48741f, 3.73205f, 4.01078f, 4.33148f, 4.70463f, 5.14455f, 5.67128f,
+6.31375f, 7.11537f, 8.14435f, 9.51436f, 11.4301f, 14.3007f, 19.0811f, 28.6363f, 57.29f, 5.57135e+08f,
+-57.29f, -28.6363f, -19.0811f, -14.3007f, -11.4301f, -9.51436f, -8.14435f, -7.11537f, -6.31375f, -5.67128f,
+-5.14455f, -4.70463f, -4.33148f, -4.01078f, -3.73205f, -3.48741f, -3.27085f, -3.07768f, -2.90421f, -2.74748f,
+-2.60509f, -2.47509f, -2.35585f, -2.24604f, -2.14451f, -2.0503f, -1.96261f, -1.88073f, -1.80405f, -1.73205f,
+-1.66428f, -1.60033f, -1.53987f, -1.48256f, -1.42815f, -1.37638f, -1.32704f, -1.27994f, -1.2349f, -1.19175f,
+-1.15037f, -1.11061f, -1.07237f, -1.03553f, -1.0f, -0.965689f, -0.932515f, -0.900404f, -0.869287f, -0.8391f,
+-0.809784f, -0.781286f, -0.753554f, -0.726543f, -0.700208f, -0.674509f, -0.649408f, -0.624869f, -0.600861f, -0.57735f,
+-0.554309f, -0.531709f, -0.509525f, -0.487733f, -0.466308f, -0.445229f, -0.424475f, -0.404026f, -0.383864f, -0.36397f,
+-0.344328f, -0.32492f, -0.305731f, -0.286745f, -0.267949f, -0.249328f, -0.230868f, -0.212557f, -0.19438f, -0.176327f,
+-0.158384f, -0.140541f, -0.122785f, -0.105104f, -0.0874887f, -0.0699268f, -0.0524078f, -0.0349208f, -0.0174551f, -3.58979e-09f,
+0.0174551f, 0.0349208f, 0.0524078f, 0.0699268f, 0.0874887f, 0.105104f, 0.122785f, 0.140541f, 0.158384f, 0.176327f,
+0.19438f, 0.212557f, 0.230868f, 0.249328f, 0.267949f, 0.286745f, 0.305731f, 0.32492f, 0.344328f, 0.36397f,
+0.383864f, 0.404026f, 0.424475f, 0.445229f, 0.466308f, 0.487733f, 0.509525f, 0.531709f, 0.554309f, 0.57735f,
+0.600861f, 0.624869f, 0.649408f, 0.674509f, 0.700208f, 0.726543f, 0.753554f, 0.781286f, 0.809784f, 0.8391f,
+0.869287f, 0.900404f, 0.932515f, 0.965689f, 1.0f, 1.03553f, 1.07237f, 1.11061f, 1.15037f, 1.19175f,
+1.2349f, 1.27994f, 1.32704f, 1.37638f, 1.42815f, 1.48256f, 1.53986f, 1.60033f, 1.66428f, 1.73205f,
+1.80405f, 1.88073f, 1.96261f, 2.0503f, 2.14451f, 2.24604f, 2.35585f, 2.47509f, 2.60509f, 2.74748f,
+2.90421f, 3.07768f, 3.27085f, 3.48741f, 3.73205f, 4.01078f, 4.33148f, 4.70463f, 5.14455f, 5.67128f,
+6.31375f, 7.11537f, 8.14435f, 9.51436f, 11.4301f, 14.3007f, 19.0811f, 28.6362f, 57.2899f, 1.85712e+08f,
+-57.29f, -28.6363f, -19.0811f, -14.3007f, -11.4301f, -9.51437f, -8.14435f, -7.11537f, -6.31375f, -5.67128f,
+-5.14455f, -4.70463f, -4.33148f, -4.01078f, -3.73205f, -3.48741f, -3.27085f, -3.07768f, -2.90421f, -2.74748f,
+-2.60509f, -2.47509f, -2.35585f, -2.24604f, -2.14451f, -2.0503f, -1.96261f, -1.88073f, -1.80405f, -1.73205f,
+-1.66428f, -1.60033f, -1.53987f, -1.48256f, -1.42815f, -1.37638f, -1.32704f, -1.27994f, -1.2349f, -1.19175f,
+-1.15037f, -1.11061f, -1.07237f, -1.03553f, -1.0f, -0.965689f, -0.932515f, -0.900404f, -0.869287f, -0.8391f,
+-0.809784f, -0.781286f, -0.753554f, -0.726543f, -0.700208f, -0.674509f, -0.649408f, -0.624869f, -0.600861f, -0.57735f,
+-0.554309f, -0.531709f, -0.509525f, -0.487733f, -0.466308f, -0.445229f, -0.424475f, -0.404026f, -0.383864f, -0.36397f,
+-0.344328f, -0.32492f, -0.305731f, -0.286745f, -0.267949f, -0.249328f, -0.230868f, -0.212557f, -0.19438f, -0.176327f,
+-0.158384f, -0.140541f, -0.122785f, -0.105104f, -0.0874887f, -0.0699268f, -0.0524078f, -0.0349208f, -0.0174551f,
+};
+#define mysin(x) sinLookup[x]
+#define mycos(x) cosLookup[x]
+#define mytan(x) tanLookup[x]
 #else
-#define mycos(x) cos(x)
-#define mysin(x) sin(x)
-#define mytan(x) tan(x)
+#define mycos(x) cos(x * 3.14 / 180)
+#define mysin(x) sin(x * 3.14 / 180)
+#define mytan(x) tan(x * 3.14 / 180)
 #endif // LOW_ACCURACY
 
 namespace peg
@@ -158,14 +241,53 @@ EngineState PixelEngine::smooth(Pixels & src, const Matrix & mask, float factor)
 		for (auto col = std::size_t{(std::size_t)(mask.x / 2 + mask.x % 2)}; col < (src.width - mask.x / 2); ++col)
 		{
 			pixelBuff[0] = pixelBuff[1] = pixelBuff[2] = 0;
-			for (auto k = std::size_t{0}; k < mask.x * mask.y; ++k)
+			switch (mask.x * mask.y)
 			{
-				pixelBuff[0] += buff[(col - mask.x / 2 + k % mask.x) + (row - mask.y / 2 + k / mask.y) * src.width + 0] * mask.data[k];
-				if(src.sizePerPixel > 1)
-					pixelBuff[1] += buff[(col - mask.x / 2 + k % mask.x) + (row - mask.y / 2 + k / mask.y) * src.width + 1] * mask.data[k];
+			case 9:
+				pixelBuff[0] += buff[col - 1 + (row - 1) * src.width + 0] * mask.data[0] +
+								buff[col + (row - 1) * src.width + 0] * mask.data[1] +
+								buff[col + 1 + (row - 1) * src.width + 0] * mask.data[2] +
+								buff[col - 1 + (row)*src.width + 0] * mask.data[3] +
+								buff[col + (row)*src.width + 0] * mask.data[4] +
+								buff[col + 1 + (row)*src.width + 0] * mask.data[5] +
+								buff[col - 1 + (row + 1) * src.width + 0] * mask.data[6] +
+								buff[col + (row + 1) * src.width + 0] * mask.data[7] +
+								buff[col + 1 + (row + 1) * src.width + 0] * mask.data[8];
+
+				if (src.sizePerPixel > 1)
+					pixelBuff[1] += buff[col - 1 + (row - 1) * src.width + 1] * mask.data[0] +
+									buff[col + (row - 1) * src.width + 1] * mask.data[1] +
+									buff[col + 1 + (row - 1) * src.width + 1] * mask.data[2] +
+									buff[col - 1 + (row)*src.width + 1] * mask.data[3] +
+									buff[col + (row)*src.width + 1] * mask.data[4] +
+									buff[col + 1 + (row)*src.width + 1] * mask.data[5] +
+									buff[col - 1 + (row + 1) * src.width + 1] * mask.data[6] +
+									buff[col + (row + 1) * src.width + 1] * mask.data[7] +
+									buff[col + 1 + (row + 1) * src.width + 1] * mask.data[8];
+
 				if (src.sizePerPixel > 2)
-					pixelBuff[2] += buff[(col - mask.x / 2 + k % mask.x) + (row - mask.y / 2 + k / mask.y) * src.width + 2] * mask.data[k];
+					pixelBuff[2] += buff[col - 1 + (row - 1) * src.width + 2] * mask.data[0] +
+									buff[col + (row - 1) * src.width + 2] * mask.data[1] +
+									buff[col + 1 + (row - 1) * src.width + 2] * mask.data[2] +
+									buff[col - 1 + (row)*src.width + 2] * mask.data[3] +
+									buff[col + (row)*src.width + 2] * mask.data[4] +
+									buff[col + 1 + (row)*src.width + 2] * mask.data[5] +
+									buff[col - 1 + (row + 1) * src.width + 2] * mask.data[6] +
+									buff[col + (row + 1) * src.width + 2] * mask.data[7] +
+									buff[col + 1 + (row + 1) * src.width + 2] * mask.data[8];
+				break;
+			default:
+				for (auto k = std::size_t{ 0 }; k < mask.x * mask.y; ++k)
+				{
+					pixelBuff[0] += buff[(col - mask.x / 2 + k % mask.x) + (row - mask.y / 2 + k / mask.y) * src.width + 0] * mask.data[k];
+					if (src.sizePerPixel > 1)
+						pixelBuff[1] += buff[(col - mask.x / 2 + k % mask.x) + (row - mask.y / 2 + k / mask.y) * src.width + 1] * mask.data[k];
+					if (src.sizePerPixel > 2)
+						pixelBuff[2] += buff[(col - mask.x / 2 + k % mask.x) + (row - mask.y / 2 + k / mask.y) * src.width + 2] * mask.data[k];
+				}
+				break;
 			}
+			
 			src.data[col + row * src.width + 0] = pixelBuff[0] * factor;
 			if (src.sizePerPixel > 1)
 				src.data[col + row * src.width + 1] = pixelBuff[1] * factor;
@@ -219,19 +341,90 @@ EngineState PixelEngine::smooth2D(Pixels & src, const Matrix & mask1, const Matr
 		{
 			pixelBuff1[0] = pixelBuff1[1] = pixelBuff1[2] = 0;
 			pixelBuff2[0] = pixelBuff2[1] = pixelBuff2[2] = 0;
-			for (auto k = std::size_t{0}; k < mask1.x * mask1.y; ++k)
+			switch (mask1.x * mask1.y)
 			{
-				pixelBuff1[0] += buff[(col - mask1.x / 2 + k % mask1.x) + (row - mask1.y / 2 + k / mask1.y) * src.width + 0] * mask1.data[k];
-				pixelBuff2[0] += buff[(col - mask2.x / 2 + k % mask2.x) + (row - mask2.y / 2 + k / mask2.y) * src.width + 0] * mask2.data[k];
-				if (src.sizePerPixel > 1) {
-					pixelBuff1[1] += buff[(col - mask1.x / 2 + k % mask1.x) + (row - mask1.y / 2 + k / mask1.y) * src.width + 1] * mask1.data[k];
-					pixelBuff2[1] += buff[(col - mask2.x / 2 + k % mask2.x) + (row - mask2.y / 2 + k / mask2.y) * src.width + 1] * mask2.data[k];
+			case 9:
+				pixelBuff1[0] += buff[col - 1 + (row - 1) * src.width + 0] * mask1.data[0] +
+								 buff[col + (row - 1) * src.width + 0] * mask1.data[1] +
+								 buff[col + 1 + (row - 1) * src.width + 0] * mask1.data[2] +
+								 buff[col - 1 + (row)*src.width + 0] * mask1.data[3] +
+								 buff[col + (row)*src.width + 0] * mask1.data[4] +
+								 buff[col + 1 + (row)*src.width + 0] * mask1.data[5] +
+								 buff[col - 1 + (row + 1) * src.width + 0] * mask1.data[6] +
+								 buff[col + (row + 1) * src.width + 0] * mask1.data[7] +
+								 buff[col + 1 + (row + 1) * src.width + 0] * mask1.data[8];
+
+				pixelBuff2[0] += buff[col - 1 + (row - 1) * src.width + 0] * mask2.data[0] +
+								 buff[col + (row - 1) * src.width + 0] * mask2.data[1] +
+								 buff[col + 1 + (row - 1) * src.width + 0] * mask2.data[2] +
+								 buff[col - 1 + (row)*src.width + 0] * mask2.data[3] +
+								 buff[col + (row)*src.width + 0] * mask2.data[4] +
+								 buff[col + 1 + (row)*src.width + 0] * mask2.data[5] +
+								 buff[col - 1 + (row + 1) * src.width + 0] * mask2.data[6] +
+								 buff[col + (row + 1) * src.width + 0] * mask2.data[7] +
+								 buff[col + 1 + (row + 1) * src.width + 0] * mask2.data[8];
+				if (src.sizePerPixel > 1)
+				{
+					pixelBuff1[1] += buff[col - 1 + (row - 1) * src.width + 1] * mask1.data[0] +
+									buff[col + (row - 1) * src.width + 1] * mask1.data[1] +
+									buff[col + 1 + (row - 1) * src.width + 1] * mask1.data[2] +
+									buff[col - 1 + (row)*src.width + 1] * mask1.data[3] +
+									buff[col + (row)*src.width + 1] * mask1.data[4] +
+									buff[col + 1 + (row)*src.width + 1] * mask1.data[5] +
+									buff[col - 1 + (row + 1) * src.width + 1] * mask1.data[6] +
+									buff[col + (row + 1) * src.width + 1] * mask1.data[7] +
+									buff[col + 1 + (row + 1) * src.width + 1] * mask1.data[8];
+
+					pixelBuff2[1] += buff[col - 1 + (row - 1) * src.width + 1] * mask2.data[0] +
+									buff[col + (row - 1) * src.width + 1] * mask2.data[1] +
+									buff[col + 1 + (row - 1) * src.width + 1] * mask2.data[2] +
+									buff[col - 1 + (row)*src.width + 1] * mask2.data[3] +
+									buff[col + (row)*src.width + 1] * mask2.data[4] +
+									buff[col + 1 + (row)*src.width + 1] * mask2.data[5] +
+									buff[col - 1 + (row + 1) * src.width + 1] * mask2.data[6] +
+									buff[col + (row + 1) * src.width + 1] * mask2.data[7] +
+									buff[col + 1 + (row + 1) * src.width + 1] * mask2.data[8];
 				}
-				if (src.sizePerPixel > 2) {
-					pixelBuff1[2] += buff[(col - mask1.x / 2 + k % mask1.x) + (row - mask1.y / 2 + k / mask1.y) * src.width + 2] * mask1.data[k];
-					pixelBuff2[2] += buff[(col - mask2.x / 2 + k % mask2.x) + (row - mask2.y / 2 + k / mask2.y) * src.width + 2] * mask2.data[k];
+				if (src.sizePerPixel > 2)
+				{
+					pixelBuff1[2] += buff[col - 1 + (row - 1) * src.width + 2] * mask1.data[0] +
+									buff[col + (row - 1) * src.width + 2] * mask1.data[1] +
+									buff[col + 1 + (row - 1) * src.width + 2] * mask1.data[2] +
+									buff[col - 1 + (row)*src.width + 2] * mask1.data[3] +
+									buff[col + (row)*src.width + 2] * mask1.data[4] +
+									buff[col + 1 + (row)*src.width + 2] * mask1.data[5] +
+									buff[col - 1 + (row + 1) * src.width + 2] * mask1.data[6] +
+									buff[col + (row + 1) * src.width + 2] * mask1.data[7] +
+									buff[col + 1 + (row + 1) * src.width + 2] * mask1.data[8];
+					pixelBuff2[2] += buff[col - 1 + (row - 1) * src.width + 2] * mask2.data[0] +
+									buff[col + (row - 1) * src.width + 2] * mask2.data[1] +
+									buff[col + 1 + (row - 1) * src.width + 2] * mask2.data[2] +
+									buff[col - 1 + (row)*src.width + 2] * mask2.data[3] +
+									buff[col + (row)*src.width + 2] * mask2.data[4] +
+									buff[col + 1 + (row)*src.width + 2] * mask2.data[5] +
+									buff[col - 1 + (row + 1) * src.width + 2] * mask2.data[6] +
+									buff[col + (row + 1) * src.width + 2] * mask2.data[7] +
+									buff[col + 1 + (row + 1) * src.width + 2] * mask2.data[8];
 				}
+				break;
+			default:
+				for (auto k = std::size_t{ 0 }; k < mask1.x * mask1.y; ++k)
+				{
+					pixelBuff1[0] += buff[(col - mask1.x / 2 + k % mask1.x) + (row - mask1.y / 2 + k / mask1.y) * src.width + 0] * mask1.data[k];
+					pixelBuff2[0] += buff[(col - mask2.x / 2 + k % mask2.x) + (row - mask2.y / 2 + k / mask2.y) * src.width + 0] * mask2.data[k];
+					if (src.sizePerPixel > 1) {
+						pixelBuff1[1] += buff[(col - mask1.x / 2 + k % mask1.x) + (row - mask1.y / 2 + k / mask1.y) * src.width + 1] * mask1.data[k];
+						pixelBuff2[1] += buff[(col - mask2.x / 2 + k % mask2.x) + (row - mask2.y / 2 + k / mask2.y) * src.width + 1] * mask2.data[k];
+					}
+					if (src.sizePerPixel > 2) {
+						pixelBuff1[2] += buff[(col - mask1.x / 2 + k % mask1.x) + (row - mask1.y / 2 + k / mask1.y) * src.width + 2] * mask1.data[k];
+						pixelBuff2[2] += buff[(col - mask2.x / 2 + k % mask2.x) + (row - mask2.y / 2 + k / mask2.y) * src.width + 2] * mask2.data[k];
+					}
+				}
+				break;
 			}
+			
+			
 			pixelBuff1[0] *= factor1; pixelBuff1[1] *= factor1; pixelBuff1[2] *= factor1;
 			pixelBuff2[0] *= factor2; pixelBuff2[1] *= factor2; pixelBuff2[2] *= factor2;
 			src.data[col + row * src.width + 0] = sqrtf(pixelBuff1[0] * pixelBuff1[0] + pixelBuff2[0] * pixelBuff2[0]);
@@ -388,8 +581,8 @@ EngineState PixelEngine::rotate(Pixels & src, myfloat angle, std::uint8_t mode)
 		return ENG_BUSSY;
 
 	f_state = ENG_RUNNING;
-	double angleR = ((abs(angle) - int(abs(angle) / 90) * 90) * 3.14 / 180);
-	//double angleR = angle  * 3.14 / 180;
+	//double angleR = ((abs(angle) - int(abs(angle) / 90) * 90) * 3.14 / 180);
+	std::int16_t angleR = abs(angle) - int(abs(angle) / 90) * 90;
 	bool b_change;
 	switch ((int(angle) / 90) % 4)
 	{
@@ -403,10 +596,12 @@ EngineState PixelEngine::rotate(Pixels & src, myfloat angle, std::uint8_t mode)
 		b_change = true;
 		break;
 	}
-	//New x = height*cos(a+90)+width*cos(a)
-	std::uint16_t x = src.height * abs(sin(angleR)) + src.width * abs(cos(angleR));
-	//New y = height*sin(a+90)+width*sin(a)
-	std::uint16_t y = src.height * abs(cos(angleR)) + src.width * abs(sin(angleR));
+
+	//std::uint16_t x = src.height * abs(sin(angleR)) + src.width * abs(cos(angleR));
+	std::uint16_t x = src.height * abs(mysin(angleR)) + src.width * abs(mycos(angleR));
+
+	//std::uint16_t y = src.height * abs(cos(angleR)) + src.width * abs(sin(angleR));
+	std::uint16_t y = src.height * abs(mycos(angleR)) + src.width * abs(mysin(angleR));
 
 	std::uint16_t dx = 0, dy = 0;
 	std::vector<std::uint8_t> buff(x * y * src.sizePerPixel);
@@ -415,8 +610,8 @@ EngineState PixelEngine::rotate(Pixels & src, myfloat angle, std::uint8_t mode)
 	{
 		for (auto col = std::size_t{0}; col < src.width; ++col)
 		{
-			dy = row * cos(angleR) + col * sin(angleR);
-			dx = (src.height - row) * sin(angleR) + col * cos(angleR);
+			dy = row * mycos(angleR) + col * mysin(angleR);
+			dx = (src.height - row) * mysin(angleR) + col * mycos(angleR);
 			/*
 			dx = b_change ? row * cos(angleR) + col * sin(angleR) :
 				((src.height - row)*sin(angleR) + col * cos(angleR));
@@ -518,9 +713,9 @@ EngineState PixelEngine::HOG(
 {
 	myassert(src.sizePerPixel && src.sizePerPixel <= 3 && src.height && src.width, "Src pixels member sizePerPixel or height or width is 0. peg::PixelEngine::HOG");
 	myassert(src.data.size() >= (src.height * src.width * src.sizePerPixel), "Bad pixels size. peg::PixelEngine::HOG");
-	myassert(&mX && mX.x >= 1 && mX.y >= 1 && mX.y <= src.height && mX.x <= src.width, "Bad matrix size. peg::PixelEngine::HOG");
+	myassert(mX.x >= 1 && mX.y >= 1 && mX.y <= src.height && mX.x <= src.width, "Bad matrix size. peg::PixelEngine::HOG");
 	myassert(mX.data.size() >= mX.x * mX.y, "Bad matrix buffer size. peg::PixelEngine::HOG");
-	myassert(&mY && mY.x >= 1 && mY.y >= 1 && mY.y <= src.height && mY.x <= src.width, "Bad matrix size. peg::PixelEngine::HOG");
+	myassert(mY.x >= 1 && mY.y >= 1 && mY.y <= src.height && mY.x <= src.width, "Bad matrix size. peg::PixelEngine::HOG");
 	myassert(mY.data.size() >= mY.x * mY.y, "Bad matrix buffer size. peg::PixelEngine::HOG");
 	myassert(mY.x == mX.y && mY.y == mX.x, "Matrix asymmetry. peg::PixelEngine::HOG");
 	if (f_state != ENG_READY)
@@ -559,10 +754,9 @@ EngineState PixelEngine::HOG(
 			{
 				for (std::size_t x1 = 0; x1 < mX.x; x1++)
 				{
-					for (std::size_t k = 0; k < src.sizePerPixel; k++)
-					{
-						cx += src.data[(x - mX.x / 2 + x1) + (y - mX.y / 2 + y1) * src.width + k] * mX.data[y1 * mX.x + x1];
-					}
+					cx += src.data[(x - mX.x / 2 + x1) + (y - mX.y / 2 + y1) * src.width + 0] * mX.data[y1 * mX.x + x1];
+					if (src.sizePerPixel > 1)cx += src.data[(x - mX.x / 2 + x1) + (y - mX.y / 2 + y1) * src.width + 1] * mX.data[y1 * mX.x + x1];
+					if (src.sizePerPixel > 2)cx += src.data[(x - mX.x / 2 + x1) + (y - mX.y / 2 + y1) * src.width + 2] * mX.data[y1 * mX.x + x1];
 				}
 				cx /= src.sizePerPixel * mX.x;
 			}
@@ -572,10 +766,9 @@ EngineState PixelEngine::HOG(
 			{
 				for (std::size_t x1 = 0; x1 < mY.x; x1++)
 				{
-					for (std::size_t k = 0; k < src.sizePerPixel; k++)
-					{
-						cy += src.data[(x - mY.x / 2 + x1) + (y - mY.y / 2 + y1) * src.width + k] * mY.data[y1 * mY.x + x1];
-					}
+					cy += src.data[(x - mY.x / 2 + x1) + (y - mY.y / 2 + y1) * src.width + 0] * mY.data[y1 * mY.x + x1];
+					if (src.sizePerPixel > 1)cy += src.data[(x - mY.x / 2 + x1) + (y - mY.y / 2 + y1) * src.width + 1] * mY.data[y1 * mY.x + x1];
+					if (src.sizePerPixel > 1)cy += src.data[(x - mY.x / 2 + x1) + (y - mY.y / 2 + y1) * src.width + 2] * mY.data[y1 * mY.x + x1];
 				}
 				cy /= src.sizePerPixel * mY.x;
 			}
