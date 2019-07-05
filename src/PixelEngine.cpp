@@ -153,28 +153,27 @@ T clamp(const T min_value, const T max_value, const T value)
 PixelEngine::PixelEngine(EngineState init)
 {
 #ifdef CUDA_CODE_COMPILE
-	device_ = -1;
-	cudaGetDevice(&device_);
-	cudaGetDeviceProperties(&prop_, device_);
-
-#ifndef NDEBUG
-
-	if (!(prop_.major > 3 || (prop_.major == 3 && prop_.minor >= 5)))
-	{
-		std::cout << "GPU"<< device_ << "-" << prop_.name << "does not support CUDA Dynamic Parallelism." << std::endl;
+	if(init==ENG_CUDA_READY){
 		device_ = -1;
-		custate_ = ENG_CUDA_NOT_SUPPORT;
+		cudaGetDevice(&device_);
+		cudaGetDeviceProperties(&prop_, device_);
+
+		if (!(prop_.major > 3 || (prop_.major == 3 && prop_.minor >= 5)))
+		{
+			std::cout << "GPU"<< device_ << "-" << prop_.name << "does not support CUDA Dynamic Parallelism." << std::endl;
+			device_ = -1;
+			custate_ = ENG_CUDA_NOT_SUPPORT;
+		}
+		else if(init==ENG_CUDA_READY){
+			std::cout << "Use GPU device:" << device_ << ": " << prop_.name << std::endl;
+			std::cout << "SM Count:" << prop_.multiProcessorCount << std::endl;
+			std::cout << "Shared Memery Per Block:" << (prop_.sharedMemPerBlock / 1024) << " KB "<< std::endl;
+			std::cout << "Max Threads Per Block:" << prop_.maxThreadsPerBlock << std::endl;
+			std::cout << "Max Threads Per Multi Processor:" << prop_.maxThreadsPerMultiProcessor << std::endl;
+			std::cout << "Max Threads Bunch:" << prop_.maxThreadsPerMultiProcessor / 32 << std::endl;
+			custate_ = ENG_CUDA_READY;
+		}
 	}
-	else if(init==ENG_CUDA_READY){
-		std::cout << "Use GPU device:" << device_ << ": " << prop_.name << std::endl;
-		std::cout << "SM Count:" << prop_.multiProcessorCount << std::endl;
-		std::cout << "Shared Memery Per Block:" << (prop_.sharedMemPerBlock / 1024) << " KB "<< std::endl;
-		std::cout << "Max Threads Per Block:" << prop_.maxThreadsPerBlock << std::endl;
-		std::cout << "Max Threads Per Multi Processor:" << prop_.maxThreadsPerMultiProcessor << std::endl;
-		std::cout << "Max Threads Bunch:" << prop_.maxThreadsPerMultiProcessor / 32 << std::endl;
-		custate_ = ENG_CUDA_READY;
-	}
-#endif // !NDEBUG
 
 #endif // CUDA_CODE_COMPILE
 
@@ -198,7 +197,7 @@ Mask is:
 		faceor * [m  m  m]
 				 [m  m  m]
 
-An std::runtime_error is thrown if:
+Return peg::ENG_ERR if:
 	pixels data size < height * width * sizePerPixel
 	pixels sizePerPixel or height or width is 0
 	Mask matrix buffer < n * n
@@ -236,13 +235,14 @@ EngineState PixelEngine::smooth(Pixels & src, const Matrix & mask, float factor)
 	std::uint16_t pixelBuff[3] = {};
 
 	// Only handle the central area
-	for (auto row = std::size_t{(std::size_t)(mask.y / 2 + mask.y % 2)}; row < (src.height - mask.y / 2); ++row)
+	for (std::size_t row = (mask.y / 2 + mask.y % 2); row < (src.height - mask.y / 2); row += src.sizePerPixel)
 	{
-		for (auto col = std::size_t{(std::size_t)(mask.x / 2 + mask.x % 2)}; col < (src.width - mask.x / 2); ++col)
+		for (std::size_t col = (mask.x / 2 + mask.x % 2); col < (src.width - mask.x / 2); col += src.sizePerPixel)
 		{
 			pixelBuff[0] = pixelBuff[1] = pixelBuff[2] = 0;
 			switch (mask.x * mask.y)
 			{
+			// 3 * 3 matrix optimization
 			case 9:
 				pixelBuff[0] += buff[col - 1 + (row - 1) * src.width + 0] * mask.data[0] +
 								buff[col + (row - 1) * src.width + 0] * mask.data[1] +
@@ -252,8 +252,7 @@ EngineState PixelEngine::smooth(Pixels & src, const Matrix & mask, float factor)
 								buff[col + 1 + (row)*src.width + 0] * mask.data[5] +
 								buff[col - 1 + (row + 1) * src.width + 0] * mask.data[6] +
 								buff[col + (row + 1) * src.width + 0] * mask.data[7] +
-								buff[col + 1 + (row + 1) * src.width + 0] * mask.data[8];
-
+								buff[col + 1 + (row + 1) * src.width + 0] * mask.data[8];	
 				if (src.sizePerPixel > 1)
 					pixelBuff[1] += buff[col - 1 + (row - 1) * src.width + 1] * mask.data[0] +
 									buff[col + (row - 1) * src.width + 1] * mask.data[1] +
@@ -264,7 +263,6 @@ EngineState PixelEngine::smooth(Pixels & src, const Matrix & mask, float factor)
 									buff[col - 1 + (row + 1) * src.width + 1] * mask.data[6] +
 									buff[col + (row + 1) * src.width + 1] * mask.data[7] +
 									buff[col + 1 + (row + 1) * src.width + 1] * mask.data[8];
-
 				if (src.sizePerPixel > 2)
 					pixelBuff[2] += buff[col - 1 + (row - 1) * src.width + 2] * mask.data[0] +
 									buff[col + (row - 1) * src.width + 2] * mask.data[1] +
@@ -335,9 +333,9 @@ EngineState PixelEngine::smooth2D(Pixels & src, const Matrix & mask1, const Matr
 	std::uint16_t pixelBuff1[3] = {};
 	std::uint16_t pixelBuff2[3] = {};
 
-	for (auto row = std::size_t{(std::size_t)(mask1.y / 2 + mask1.y % 2)}; row < (src.height - mask1.y / 2); ++row)
+	for (std::size_t row = (mask1.y / 2 + mask1.y % 2); row < (src.height - mask1.y / 2); row += src.sizePerPixel)
 	{
-		for (auto col = std::size_t{(std::size_t)(mask1.x / 2 + mask1.x % 2)}; col < (src.width - mask1.x / 2); ++col)
+		for (std::size_t col = (mask1.x / 2 + mask1.x % 2); col < (src.width - mask1.x / 2); col += src.sizePerPixel)
 		{
 			pixelBuff1[0] = pixelBuff1[1] = pixelBuff1[2] = 0;
 			pixelBuff2[0] = pixelBuff2[1] = pixelBuff2[2] = 0;
@@ -477,14 +475,14 @@ EngineState PixelEngine::resize(Pixels & src, std::uint16_t newWidth, std::uint1
 
 	std::vector<std::uint8_t> buff(newHeight * newWidth * src.sizePerPixel);
 
-	for (auto row = std::size_t{0}; row < newHeight; row += b_y2Big ? y_step : 1)
+	for (std::size_t row = 0; row < newHeight; row += b_y2Big ? y_step + src.sizePerPixel : 1 + src.sizePerPixel)
 	{
-		for (auto col = std::size_t{0}; col < newWidth - 1; ++col)
+		for (std::size_t col = 0; col < newWidth - 1; col += src.sizePerPixel)
 		{
 			if (b_x2Big)
 			{
 				// amplification
-				for (auto x = std::size_t{0}; x < x_step; ++x)
+				for (std::size_t x = 0; x < x_step; ++x)
 				{
 					buff[row * newWidth + col + 0] = src.data[col * x_step + (b_y2Big ? row / y_step : row * y_step) * src.width + 0] +
 													(src.data[col * x_step + (b_y2Big ? row / y_step : row * y_step) * src.width + 0] -
@@ -513,7 +511,7 @@ EngineState PixelEngine::resize(Pixels & src, std::uint16_t newWidth, std::uint1
 			if (b_y2Big && row > 0)
 			{
 				// amplification
-				for (auto y = std::size_t{1}; y < y_step; ++y)
+				for (std::size_t y = 1; y < y_step; ++y)
 				{
 					buff[(row + y - y_step) * newWidth + col + 0] =
 											buff[(row - y_step) * newWidth + col + 0] +
@@ -606,9 +604,9 @@ EngineState PixelEngine::rotate(Pixels & src, myfloat angle, std::uint8_t mode)
 	std::uint16_t dx = 0, dy = 0;
 	std::vector<std::uint8_t> buff(x * y * src.sizePerPixel);
 
-	for (auto row = std::size_t{0}; row < src.height; ++row)
+	for (std::size_t row = 0; row < src.height; row+=src.sizePerPixel)
 	{
-		for (auto col = std::size_t{0}; col < src.width; ++col)
+		for (std::size_t col = 0; col < src.width; col += src.sizePerPixel)
 		{
 			dy = row * mycos(angleR) + col * mysin(angleR);
 			dx = (src.height - row) * mysin(angleR) + col * mycos(angleR);
@@ -660,8 +658,9 @@ EngineState PixelEngine::flip(Pixels & src, std::uint8_t mode, std::uint16_t sel
 	{
 	case 0:
 		// vertically
-		for (auto row = std::size_t{0}; row < src.height / 2 && row < selectLine; ++row)
-			for (auto col = std::size_t{ 0 }; col < src.width; ++col) {
+		for (std::size_t row = 0; row < src.height / 2 && row < selectLine; row+=src.sizePerPixel)
+			for (std::size_t col = 0; col < src.width; col += src.sizePerPixel)
+			{
 				buff[0] = src.data[row * src.width + col + 0];
 				src.data[row * src.width + col + 0] = src.data[(src.height - row - 1) * src.width + col + 0];
 				src.data[(src.height - row - 1) * src.width + col + 0] = buff[0];
@@ -680,8 +679,9 @@ EngineState PixelEngine::flip(Pixels & src, std::uint8_t mode, std::uint16_t sel
 		break;
 	default:
 		// horizontally
-		for (auto row = std::size_t{0}; row < src.height; ++row)
-			for (auto col = std::size_t{ 0 }; col < src.width / 2 && col < selectLine; ++col) {
+		for (std::size_t row = 0; row < src.height; row += src.sizePerPixel)
+			for (std::size_t col = 0; col < src.width / 2 && col < selectLine; row += src.sizePerPixel)
+			{
 				buff[0] = src.data[row * src.width + col + 0];
 				src.data[row * src.width + col + 0] = src.data[row * src.width + (src.width - col) + 0];
 				src.data[row * src.width + (src.width - col) + 0] = buff[0];
@@ -745,9 +745,9 @@ EngineState PixelEngine::HOG(
 	endX = endX < edgeX / 2 ? edgeX : src.width;
 	endY = endY < edgeY / 2 ? edgeY : src.height;
 
-	for (std::size_t y = startY + edgeY / 2; y < endY - edgeY / 2; y++)
+	for (std::size_t y = startY + edgeY / 2; y < endY - edgeY / 2; y+=src.sizePerPixel)
 	{
-		for (std::size_t x = startX + edgeX / 2; x < endX - edgeX / 2; x++)
+		for (std::size_t x = startX + edgeX / 2; x < endX - edgeX / 2; x += src.sizePerPixel)
 		{
 			// Calculate single point X gradient value
 			for (std::size_t y1 = 0; y1 < mX.y; y1++)

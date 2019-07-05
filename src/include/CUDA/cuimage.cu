@@ -20,9 +20,9 @@ __global__  void __cusmooth(std::uint8_t* dst,
 	size_t i, k, dx, dy;
 	
 
-	for (dy=0; dy < height / gridDim.x; ++dy)
+	for (dy=0; dy < height / gridDim.x; dy+=pixels)
 	{
-		for (dx=0; dx < width / blockDim.x; ++dx) {
+		for (dx=0; dx < width / blockDim.x; dx+=pixels) {
 			if (((x + dx) < mx / 2)||((y + dy)< my/2) || ((x + dx) > mx / 2) || ((y + dy) > my / 2)) {
 				for (i = 0; i < pixels; i++)
 				{

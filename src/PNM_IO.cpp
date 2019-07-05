@@ -336,9 +336,9 @@ pnm_io::PNM_STATE pnm_io::PNM_IO::ReadHeader(PNM *f, std::istream &is)
 	f->type = detail::MagNum2PNMTYPE(f->magicNumber);
     
 #ifdef NDEBUG
-    if (!(header.width && header.height && header.maxValue))
+    if (!(f->width && f->height && f->maxValue))
     {
-        header.type = NO_TYPE;
+        f->type = NO_TYPE;
         return PNM_RT_ERR;
     }
 #endif // NDEBUG

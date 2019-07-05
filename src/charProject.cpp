@@ -20,7 +20,7 @@
 
 void test(pnm_io::PNM f) {
 	std::cout << f.height << f.width << std::endl;
-}
+};
 
 int main(int argc, char **argv)
 {
@@ -38,6 +38,7 @@ int main(int argc, char **argv)
 	myfloat f_angle = 30.0f;
 	bool b_mypgmsmooth = true;
 	bool b_mysobel = false;
+	auto start = std::chrono::system_clock::now();
 	/*
 	CmdArgsMap cmdArgs = CmdArgsMap(argc, argv, "--")("help", "Produce help message", &b_help)\
 	("input", "--input InputFileName: Need to specify an input file.(Default is input.pgm).", &s_inputFileName, s_inputFileName)\
@@ -62,7 +63,7 @@ int main(int argc, char **argv)
 
 	n_pnm.ReadPNMFile(&m_org);
 	pnm_io::PNM m_out(s_outputFileName,&m_org);
-	std::vector<std::string> slist = { s_inputFileName};
+	std::vector<std::string> slist = { s_inputFileName };
 	//n_pnm.CreateTask(&test,&slist);
 
 	if (b_easypgm)
