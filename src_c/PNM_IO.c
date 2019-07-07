@@ -1,13 +1,13 @@
 #include "include/PNM_IO.h"
 
-// For q1 && q2 && q3, if q1 is FALSE, the subsequent items will not calculated.
-// For q1 || q2 || q3, if q1 is TRUE, the subsequent items will not calculated.
-PNM_STATE mymalloc(uchar** buff,size_t size){
+PNM_STATE pnmmalloc(uchar** buff,size_t size){
 	if (!size) return PNM_RT_ERR;
-	if(*buff && malloc_usable_size(*buff) < size){
-		free(*buff); *buff = NULL;
+	if(*buff){
+		if (malloc_usable_size(*buff) < size) {
+			free(*buff); *buff = NULL;
+		}
+		else { return PNM_SUCCESS; }
 	}
-	else { return PNM_SUCCESS; }
 	*buff = (uchar*)malloc(size);
 	if (!*buff || malloc_usable_size(*buff) < size)return PNM_RT_ERR;
 	return PNM_SUCCESS;
@@ -76,11 +76,10 @@ void PNMTYPE2MagNum(uchar* dst, PNMTYPE type) {
 #define clamp(min_value, max_value, value) \
 	value < min_value ? min_value : (value > max_value ? max_value : value);
 
-#define getFileLen(size, pfile)			\
-	size_t getFileLenTmp=ftell(pfile);	\
-	fseek(pfile, 0, SEEK_END);			\
-	size = ftell(pfile);				\
-	fseek(pfile, getFileLenTmp, SEEK_SET);
+#define getFileLen(size, pfile) \
+	fseek(pfile, 0, SEEK_END);  \
+	size = ftell(pfile);        \
+	fseek(pfile, 0, SEEK_SET);
 
 PNM_STATE ReadPNMFile(PNM* f, uint16_t const pa);
 PNM_STATE ReadPBMFile(PNM* f, uint16_t const pa);
@@ -166,7 +165,7 @@ PNM_STATE ReadPBMFile(PNM* f, uint16_t const pa)
 	getFileLen(n_size, pf_read);
 	n_start = n_size - f->height * (f->width / 8 + f->width % 8);
 
-	if(mymalloc(&buff, n_size - n_start)!= PNM_SUCCESS)return PNM_RT_ERR;
+	if(pnmmalloc(&buff, n_size - n_start)!= PNM_SUCCESS)return PNM_RT_ERR;
 
 	if (fread(buff, n_size - n_start, 1, pf_read) < (n_size - n_start)) {
 		free(buff);
@@ -224,9 +223,12 @@ PNM_STATE WritePNMFile(PNM* f, uint16_t const pa)
 	pf_write = fopen(f->filename, "wb");
 	if (!pf_write)return PNM_RT_ERR;
 
-	if (WriteHeader(f, pf_write) != PNM_SUCCESS)return PNM_RT_ERR;
+	if (WriteHeader(f, pf_write) != PNM_SUCCESS) {
+		fclose(pf_write);
+		return PNM_RT_ERR;
+	}
 
-	if (fwrite(f->data, malloc_usable_size(f->data), 1, pf_write) < malloc_usable_size(f->data)) {
+	if (fwrite(f->data, 1, malloc_usable_size(f->data), pf_write) < malloc_usable_size(f->data)) {
 		fclose(pf_write);
 		return PNM_RT_ERR;
 	}
@@ -254,7 +256,7 @@ PNM_STATE WritePBMFile(PNM* f, uint16_t const pa)
 		return PNM_MEMERY_INSUFFICIENT; 
 	}
 
-	if (fwrite(f->data, malloc_usable_size(f->data), 1, pf_write) < malloc_usable_size(f->data)) {
+	if (fwrite(f->data, 1, malloc_usable_size(f->data), pf_write) < malloc_usable_size(f->data)) {
 		fclose(pf_write);
 		return PNM_RT_ERR;
 	}
@@ -291,30 +293,50 @@ PNM_STATE ReadHeader(PNM* f, FILE* is)
 	if (f->magicNumber[0] != 'P')return PNM_RT_ERR;
 	f->type = MagNum2PNMTYPE(f->magicNumber);
 	if (f->type == NO_TYPE)return PNM_RT_ERR;
-
+	uint16_t trySize = n_size;
 	uint8_t s = 0, e = 0, i = 0;
 	bool ishit = false;
-	while (n_size > (0 + sizeof(buff)) && (f->width==0 || f->height==0) ) {
+	while (trySize > (0 + sizeof(buff))) {
+
+		fread(buff, 1, sizeof(buff), is);
+		sscanf((const char*)buff, "%d.%d.%d", &f->width, &f->height, &f->maxValue);
+		if (f->width == 0 || f->height == 0 || f->maxValue == 0) {
+			sscanf((const char*)buff, "%d %d %d", &f->width, &f->height, &f->maxValue);
+		}
+		if (f->width == 0 || f->height == 0 || f->maxValue == 0) {
+			trySize -= sizeof(buff);
+			continue;
+		}
+		else break;
+	}
+	if (f->width && f->height && f->maxValue) {
+		f->threshold = f->maxValue / 2;
+		myassert(f->width != 0 && f->width < 65525 && f->height != 0 && f->height < 65525 && f->maxValue != 0 && f->maxValue <= 255);
+		f->type = MagNum2PNMTYPE(f->magicNumber);
+		return PNM_SUCCESS;
+	}
+	
+	while (trySize > (0 + sizeof(buff)) && (f->width==0 || f->height==0) ) {
 		while (s< sizeof(buff) && buff[s]!='\n') {
 			fread(buff, 1, 1, is);
-			s++; n_size -= 1;
+			s++; trySize -= 1;
 		}
 		sscanf((const char*)buff, "%d.%d", &f->width, &f->height);
 		if (f->width == 0 || f->height == 0 || f->maxValue == 0) {
 			sscanf((const char*)buff, "%d %d", &f->width, &f->height);
 		}
 	}
-	while (n_size > (0 + sizeof(buff)) && f->maxValue==0) {
+	while (trySize > (0 + sizeof(buff)) && f->maxValue==0) {
 		while (s < sizeof(buff) && buff[s] != '\n') {
 			fread(buff, 1, 1, is);
-			s++; n_size -= 1;
+			s++; trySize -= 1;
 		}
 		sscanf((const char*)buff, "%d", &f->maxValue);
 		if (f->maxValue == 0) {
 			sscanf((const char*)buff, "%d", &f->maxValue);
 		}
 	}
-	if (n_size <= (0 + sizeof(buff))) {
+	if (trySize <= (0 + sizeof(buff))) {
 		f->width = f->height = f->maxValue = 0;
 		f->type = NO_TYPE;
 		return PNM_FILE_FORMAT_ERR;
@@ -355,9 +377,9 @@ PNM_STATE ReadPixelData(PNM* f, FILE* is)
 	}
 	fseek(is, n_start, SEEK_SET);
 
-	if (mymalloc(&f->data, n_size - n_start) != PNM_SUCCESS)return PNM_RT_ERR;
+	if (pnmmalloc(&f->data, n_size - n_start) != PNM_SUCCESS)return PNM_RT_ERR;
 
-	if (fread(f->data, n_size - n_start, 1, is) < (n_size - n_start))
+	if (fread(f->data, 1, n_size - n_start, is) < (n_size - n_start))
 		return PNM_RT_ERR;
 	return PNM_SUCCESS;
 }
@@ -374,8 +396,8 @@ PNM_STATE WriteHeader(PNM* f, FILE* os)
 		
 	}
 	uchar buff[50];	
-	sprintf(buff, "%s\n%d %d\n%d\n", (char*)f->magicNumber, f->width, f->height, f->maxValue);
-	if (fwrite(buff, strlen(buff), 1, os) < strlen(buff))return PNM_RT_ERR;
+	sprintf(buff, "%s %d %d %d ", (char*)f->magicNumber, f->width, f->height, f->maxValue);
+	if (fwrite(buff, 1, strlen(buff), os) < strlen(buff))return PNM_RT_ERR;
 
 	return PNM_SUCCESS;
 }
@@ -402,15 +424,15 @@ PNM_STATE Greyscale2RGB(
 {
 	myassert((*greyscale_pixel_data) != NULL);
 
-	if (mymalloc(rgb_pixel_data, width * height * 3) != PNM_SUCCESS)return PNM_RT_ERR;
+	if (pnmmalloc(rgb_pixel_data, width * height * 3) != PNM_SUCCESS)return PNM_RT_ERR;
 
 	for (size_t row = 0; row < height; ++row)
 	{
 		for (size_t col = 0; col < width; ++col)
 		{
-			(*rgb_pixel_data)[3 * (col + row * width)] = (*greyscale_pixel_data)[col + row * width] * clamp(0.0f, 1.0f, fr);
-			(*rgb_pixel_data)[3 * (col + row * width) + 1] = (*greyscale_pixel_data)[col + row * width] * clamp(0.0f, 1.0f, fb);
-			(*rgb_pixel_data)[3 * (col + row * width) + 2] = (*greyscale_pixel_data)[col + row * width] * clamp(0.0f, 1.0f, fg);
+			(*rgb_pixel_data)[3 * (col + row * width)] = (*greyscale_pixel_data)[col + row * width] * fr;
+			(*rgb_pixel_data)[3 * (col + row * width) + 1] = (*greyscale_pixel_data)[col + row * width] * fb;
+			(*rgb_pixel_data)[3 * (col + row * width) + 2] = (*greyscale_pixel_data)[col + row * width] * fg;
 		}
 	}
 	return PNM_SUCCESS;
@@ -432,7 +454,7 @@ PNM_STATE RGB2Greyscale(
 	myassert((*rgb_pixel_data) != NULL);
 	myassert(malloc_usable_size((*rgb_pixel_data)) >= (width * height) * 3);
 
-	if (mymalloc(greyscale_pixel_data, width * height) != PNM_SUCCESS)return PNM_RT_ERR;
+	if (pnmmalloc(greyscale_pixel_data, width * height) != PNM_SUCCESS)return PNM_RT_ERR;
 
 	for (size_t row = 0; row < height; ++row)
 	{
@@ -458,7 +480,7 @@ PNM_STATE BitMap2Greyscale(
 	myassert(malloc_usable_size((*bit_map_data)) >= (width * height) / 8);
 	threshold = threshold ? threshold : 128;
 
-	if (mymalloc(greyscale_pixel_data, width * height) != PNM_SUCCESS)return PNM_RT_ERR;
+	if (pnmmalloc(greyscale_pixel_data, width * height) != PNM_SUCCESS)return PNM_RT_ERR;
 
 	for (size_t row = 0; row < height; ++row)
 	{
@@ -487,7 +509,7 @@ PNM_STATE Greyscale2BitMap(
 	myassert(malloc_usable_size((*greyscale_pixel_data)) >= (width * height) / 8);
 	threshold = threshold ? threshold : 128;
 
-	if (mymalloc(bit_map_data, width * height) != PNM_SUCCESS)return PNM_RT_ERR;
+	if (pnmmalloc(bit_map_data, width * height) != PNM_SUCCESS)return PNM_RT_ERR;
 
 	for (size_t row = 0; row < height; ++row)
 	{

@@ -19,14 +19,6 @@
 #define CUCHECK checkCudaErrors
 #endif // CUDA_CODE_COMPILE
 
-#if defined(_WIN32) || defined(_WIN64)
-#define myfloat std::float_t
-#define mydouble std::double_t
-#else
-#define myfloat float
-#define mydouble double
-#endif
-
 namespace peg{
 
 enum EngineState
@@ -66,7 +58,7 @@ struct Pixels
 struct Matrix {
 	std::uint8_t x;
 	std::uint8_t y;
-	std::vector<mydouble> data;
+	std::vector<float_t> data;
 };
 
 inline EngineState PixelsInit(Pixels &p) {
@@ -85,7 +77,8 @@ public:
 	EngineState smooth(Pixels & src, const Matrix & mask, float factor);
 	EngineState smooth2D(Pixels & src, const Matrix & mask1, const Matrix & mask2, float factor1, float factor2);
 	EngineState resize(Pixels & src, std::uint16_t newWidth, std::uint16_t newHeight, std::uint8_t mode);
-	EngineState rotate(Pixels & src, myfloat angle, std::uint8_t mode);
+	EngineState rotate(Pixels & src, float_t angle, std::uint8_t mode);
+	EngineState rotate2(Pixels& src, float_t angle, std::uint8_t mode);
 	EngineState flip(Pixels & src, std::uint8_t mode, std::uint16_t selectLine);
 	EngineState HOG(Pixels const & src, Pixels & hog, Matrix & mX, Matrix & mY, 
 					std::uint16_t startX,

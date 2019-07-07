@@ -10,10 +10,10 @@ __global__  void __cusmooth(std::uint8_t* dst,
 	std::uint8_t* src,
 	std::uint8_t mx,
 	std::uint8_t my,
-	mydouble* m,
+	float_t* m,
 	float factor
 ) {
-	mydouble* pixelBuff = new mydouble[pixels];
+	float_t* pixelBuff = new float_t[pixels];
 	
 	size_t x = threadIdx.x * width / blockDim.x;
 	size_t y = blockIdx.x * height / gridDim.x;
@@ -57,7 +57,7 @@ cudaError cusmooth(
 	std::uint8_t pixels,
 	std::uint8_t mx,
 	std::uint8_t my,
-	const mydouble* msrc,
+	const float_t* msrc,
 	float factor,
 	int device,
 	cudaDeviceProp *prop_
@@ -71,13 +71,13 @@ cudaError cusmooth(
 	cudaSetDevice(device);
 
 	std::uint8_t *buff,*out;
-	mydouble* m;
+	float_t* m;
 
 	_ret = cudaMalloc(&buff, height * width * pixels);
 	_ret = cudaMalloc(&out, height * width * pixels);
-	_ret = cudaMalloc(&m, mx * my * sizeof(mydouble));
+	_ret = cudaMalloc(&m, mx * my * sizeof(float_t));
 	_ret = cudaMemcpy(buff, src, height * width * pixels, cudaMemcpyHostToDevice);
-	_ret = cudaMemcpy(m, msrc, mx * my * sizeof(mydouble), cudaMemcpyHostToDevice);
+	_ret = cudaMemcpy(m, msrc, mx * my * sizeof(float_t), cudaMemcpyHostToDevice);
 
 	// Each block handles integer line 
 	// Each thread handles integer window
@@ -102,7 +102,7 @@ __global__  void __hog(
 	std::uint8_t* hog,
 	std::size_t particle
 ) {
-	mydouble* pixelBuff = new mydouble[pixels];
+	float_t* pixelBuff = new float_t[pixels];
 	
 	size_t x = startX + threadIdx.x * width / blockDim.x;
 	size_t y = startY + blockIdx.x * height / gridDim.x;

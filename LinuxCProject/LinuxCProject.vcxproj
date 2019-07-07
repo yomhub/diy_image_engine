@@ -83,7 +83,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ClCompile Include="..\src_c\charProject.cpp" />
-    <ClCompile Include="..\src_c\PixelEngine.cpp" />
+    <ClCompile Include="..\src_c\PixelEngine.c" />
     <ClCompile Include="..\src_c\PNM_IO.c" />
   </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

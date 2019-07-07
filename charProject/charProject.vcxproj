@@ -32,6 +32,11 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
     </CudaCompile>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\include\CUDA\cuimage.h" />
+    <ClInclude Include="..\src\include\PixelEngine.h" />
+    <ClInclude Include="..\src\include\PNM_IO.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{6A1D3B14-EEEC-4752-A72C-CD9D7815CA24}</ProjectGuid>

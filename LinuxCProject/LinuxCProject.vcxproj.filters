@@ -9,10 +9,10 @@
     <ClCompile Include="..\src_c\PNM_IO.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\src_c\PixelEngine.cpp">
+    <ClCompile Include="..\src_c\charProject.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\src_c\charProject.cpp">
+    <ClCompile Include="..\src_c\PixelEngine.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
