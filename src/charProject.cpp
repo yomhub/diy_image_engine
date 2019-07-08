@@ -6,17 +6,14 @@
 
 #include <iostream>
 
-//#include "include/CmdArgsMap.hpp"
-
 #ifdef DEBUG
-
 #include <utils/catch_utils.h>
 #include <catch2/catch.hpp>
-
 #endif // DEBUG
 
 #include "include/PNM_IO.h"
 #include "include/PixelEngine.h"
+#include "include/CmdArgsMap.hpp"
 
 void test(pnm_io::PNM f) {
 	std::cout << f.height << f.width << std::endl;
@@ -34,28 +31,28 @@ int main(int argc, char **argv)
 	bool b_myppmflipH = false;
 	bool b_mypgmscale = false;
 	float_t f_scaleFactor = 0.5;
-	bool b_mypgmrotate = true;
+	bool b_mypgmrotate = false;
 	float_t f_angle = 30.0f;
 	bool b_mypgmsmooth = false;
 	bool b_mysobel = false;
 	auto start = std::chrono::system_clock::now();
-	/*
+	
 	CmdArgsMap cmdArgs = CmdArgsMap(argc, argv, "--")("help", "Produce help message", &b_help)\
 	("input", "--input InputFileName: Need to specify an input file.(Default is input.pgm).", &s_inputFileName, s_inputFileName)\
 	("easypgm", "--easypgm OutputFileName: Print image size and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_easypgm)\
-	("mypgmtoppm", "--mypgmtoppm OutputFileName: Convert the image into an RGB image and produces a PPM file.", &s_outputFileName, s_outputFileName, &b_mypgmtoppm)\
+	("pgmtoppm", "--pgmtoppm OutputFileName: Convert the image into an RGB image and produces a PPM file.", &s_outputFileName, s_outputFileName, &b_mypgmtoppm)\
 	("R", "--R float: R channel conversion parameters. (Default 1.0f)", &f_R, f_R)\
 	("B", "--B float: B channel conversion parameters. (Default 1.0f)", &f_B, f_B)\
 	("G", "--G float: G channel conversion parameters. (Default 1.0f)", &f_G, f_G)\
-	("mypgmflipV", "--mypgmflipV OutputFileName: Flip the image vertically and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_mypgmflipV)\
-	("myppmflipH", "--mypgmflipH OutputFileName: Flip the image horizontally and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_myppmflipH)\
-	("mypgmscale", "--mypgmscale OutputFileName: Shrinks or enlarges the image and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_mypgmscale)\
-	("factor", "--factor float: Mypgmscale scale factor. (Default 0.5f)", &f_scaleFactor, f_scaleFactor)\
-	("mypgmrotate", "--mypgmrotate OutputFileName: Rotate the image and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_mypgmrotate)\
+	("ppmflipH", "--ppmflipH OutputFileName: Flip the image vertically and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_mypgmflipV)\
+	("ppmflipH", "--ppmflipH OutputFileName: Flip the image horizontally and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_myppmflipH)\
+	("pgmscale", "--pgmscale OutputFileName: Shrinks or enlarges the image and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_mypgmscale)\
+	("factor", "--factor float: Mypgmscale scale factor. (Default 0.5f)", &f_scaleFactor, f_scaleFactor)
+	("rotate", "--rotate OutputFileName: Rotate the image and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_mypgmrotate)\
 	("angle", "--angle float: Mypgmrotate angle. (Default 30.0f)", &f_angle, f_angle)\
-	("mypgmsmooth", "--mypgmrotate OutputFileName: Apply smoothing and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_mypgmsmooth)\
+	("smooth", "--smooth OutputFileName: Apply smoothing and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_mypgmsmooth)\
 	("mysobel", "--mysobel OutputFileName: Apply Sobel and Laplacian edge detector and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_mysobel)
-	;*/
+	;
 	//(peg::ENG_CUDA_READY)
 	peg::PixelEngine n_PixelEngine;
 	pnm_io::PNM_IO n_pnm;
@@ -77,8 +74,9 @@ int main(int argc, char **argv)
 	}
 	else if (b_mypgmtoppm)
 	{
-		std::vector<float_t> pa = { 1.0f, 1.0f, 1.0f };
+		std::vector<float_t> pa = { f_R, f_B, f_G };
 		// Convert the image into an RGB image and produces a PPM file
+		m_out.type = pnm_io::PPM_BINARY;
 		n_pnm.ConvertFormat(&m_org, &m_out, &pa);
 		n_pnm.WritePNMFile(&m_out);
 
@@ -87,7 +85,7 @@ int main(int argc, char **argv)
 	{
 		// Flip the image vertically and save as OutputFileName PGM file
 		peg::Pixels n_Pixels = {m_org.width, m_org.height, 1, m_org.data};
-		n_PixelEngine.flip(n_Pixels, 0, 0);
+		n_PixelEngine.flip(n_Pixels, 0);
 		m_out.data = n_Pixels.data;
 		n_pnm.WritePGMFile(&m_out);
 
@@ -96,7 +94,7 @@ int main(int argc, char **argv)
 	{
 		// Flip the image horizontally and save as OutputFileName PGM file
 		peg::Pixels n_Pixels = {m_org.width, m_org.height, 1, m_org.data};
-		n_PixelEngine.flip(n_Pixels, 1, 1);
+		n_PixelEngine.flip(n_Pixels, 1, 200);
 		m_out.data = n_Pixels.data;
 		n_pnm.WritePGMFile(&m_out);
 
@@ -191,6 +189,6 @@ int main(int argc, char **argv)
 	}
 	else
 	{
-		//std::cout << cmdArgs.help() << std::endl;
+		std::cout << cmdArgs.help() << std::endl;
 	}
 }

@@ -448,7 +448,7 @@ EngineState PixelEngine::flip(Pixels & src, std::uint8_t mode, std::uint16_t sel
 		return ENG_BUSSY;
 
 	f_state = ENG_RUNNING;
-	std::uint8_t buff[3] = {};
+	std::uint8_t buff;
 	if (selectLine == 0)selectLine = mode? src.width / 2:src.height / 2;
 	switch (mode)
 	{
@@ -457,18 +457,18 @@ EngineState PixelEngine::flip(Pixels & src, std::uint8_t mode, std::uint16_t sel
 		for (size_t row = 0; row < src.height / 2 && row < selectLine; row+=src.sizePerPixel)
 			for (size_t col = 0; col < src.width; col += src.sizePerPixel)
 			{
-				buff[0] = src.data[row * src.width + col + 0];
+				buff = src.data[row * src.width + col + 0];
 				src.data[row * src.width + col + 0] = src.data[(src.height - row - 1) * src.width + col + 0];
-				src.data[(src.height - row - 1) * src.width + col + 0] = buff[0];
+				src.data[(src.height - row - 1) * src.width + col + 0] = buff;
 				if (src.sizePerPixel > 1) {
-					buff[1] = src.data[row * src.width + col + 1];
+					buff = src.data[row * src.width + col + 1];
 					src.data[row * src.width + col + 1] = src.data[(src.height - row - 1) * src.width + col + 1];
-					src.data[(src.height - row - 1) * src.width + col + 1] = buff[1];
+					src.data[(src.height - row - 1) * src.width + col + 1] = buff;
 				}
 				if (src.sizePerPixel > 2) {
-					buff[2] = src.data[row * src.width + col + 2];
+					buff = src.data[row * src.width + col + 2];
 					src.data[row * src.width + col + 2] = src.data[(src.height - row - 1) * src.width + col + 2];
-					src.data[(src.height - row - 1) * src.width + col + 2] = buff[2];
+					src.data[(src.height - row - 1) * src.width + col + 2] = buff;
 				}
 			}
 				
@@ -478,18 +478,18 @@ EngineState PixelEngine::flip(Pixels & src, std::uint8_t mode, std::uint16_t sel
 		for (size_t row = 0; row < src.height; row += src.sizePerPixel)
 			for (size_t col = 0; col < src.width / 2 && col < selectLine; col += src.sizePerPixel)
 			{
-				buff[0] = src.data[row * src.width + col + 0];
+				buff = src.data[row * src.width + col + 0];
 				src.data[row * src.width + col + 0] = src.data[row * src.width + (src.width - col-1) + 0];
-				src.data[row * src.width + (src.width - col-1) + 0] = buff[0];
+				src.data[row * src.width + (src.width - col-1) + 0] = buff;
 				if (src.sizePerPixel > 1) {
-					buff[1] = src.data[row * src.width + col + 1];
+					buff = src.data[row * src.width + col + 1];
 					src.data[row * src.width + col + 1] = src.data[row * src.width + (src.width - col-1) + 1];
-					src.data[row * src.width + (src.width - col-1) + 1] = buff[1];
+					src.data[row * src.width + (src.width - col-1) + 1] = buff;
 				}
 				if (src.sizePerPixel > 2) {
-					buff[2] = src.data[row * src.width + col + 2];
+					buff = src.data[row * src.width + col + 2];
 					src.data[row * src.width + col + 2] = src.data[row * src.width + (src.width - col-1) + 2];
-					src.data[row * src.width + (src.width - col-1) + 2] = buff[2];
+					src.data[row * src.width + (src.width - col-1) + 2] = buff;
 				}
 			}
 		break;

@@ -473,7 +473,7 @@ EngineState flip(Pixels *src, uint8_t mode, uint16_t selectLine)
     {
     case 0:
         // vertically
-        for (size_t row = 0; row < src->height / 2 && row < selectLine; row += src->sizePerPixel){
+        for (size_t row = 0; row < (src->height / 2) && row < selectLine; row += src->sizePerPixel){
             bsAdrY = row * src->width;
             for (size_t col = 0; col < src->width; col += src->sizePerPixel)
             {
@@ -499,22 +499,22 @@ EngineState flip(Pixels *src, uint8_t mode, uint16_t selectLine)
         // horizontally
         for (size_t row = 0; row < src->height; row += src->sizePerPixel){
             bsAdrY = row * src->width;
-            for (size_t col = 0; col < src->width / 2 && col < selectLine; col += src->sizePerPixel)
+            for (size_t col = 0; col < (src->width / 2) && col < selectLine; col += src->sizePerPixel)
             {
                 buff = src->data[bsAdrY + col + 0];
-                src->data[bsAdrY + col + 0] = src->data[bsAdrY + (src->width - col) + 0];
-                src->data[bsAdrY + (src->width - col) + 0] = buff;
+                src->data[bsAdrY + col + 0] = src->data[bsAdrY + (src->width - col - 1) + 0];
+                src->data[bsAdrY + (src->width - col - 1) + 0] = buff;
                 if (src->sizePerPixel > 1)
                 {
                     buff = src->data[bsAdrY + col + 1];
-                    src->data[bsAdrY + col + 1] = src->data[bsAdrY + (src->width - col) + 1];
-                    src->data[bsAdrY + (src->width - col) + 1] = buff;
+                    src->data[bsAdrY + col + 1] = src->data[bsAdrY + (src->width - col - 1) + 1];
+                    src->data[bsAdrY + (src->width - col - 1) + 1] = buff;
                 }
                 if (src->sizePerPixel > 2)
                 {
                     buff = src->data[bsAdrY + col + 2];
-                    src->data[bsAdrY + col + 2] = src->data[bsAdrY + (src->width - col) + 2];
-                    src->data[bsAdrY + (src->width - col) + 2] = buff;
+                    src->data[bsAdrY + col + 2] = src->data[bsAdrY + (src->width - col - 1) + 2];
+                    src->data[bsAdrY + (src->width - col - 1) + 2] = buff;
                 }
             }
         }

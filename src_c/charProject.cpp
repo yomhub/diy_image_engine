@@ -91,7 +91,7 @@ int main(int argc, char **argv)
 		n_Pixels.data = (uint8_t*)malloc(m_org.width * m_org.height * m_org.sizePrePixel);
 		memcpy(n_Pixels.data, m_org.data, m_org.width * m_org.height * m_org.sizePrePixel);
 
-		PixelEngine.flip(&n_Pixels, 0, 0);
+		PixelEngine.flip(&n_Pixels, 1, 0);
 		m_out.data = (uchar*)malloc(n_Pixels.width * n_Pixels.height * n_Pixels.sizePerPixel);
 		memcpy(m_out.data, n_Pixels.data, n_Pixels.width * n_Pixels.height * n_Pixels.sizePerPixel);
 

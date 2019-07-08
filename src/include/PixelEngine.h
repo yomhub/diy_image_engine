@@ -79,7 +79,7 @@ public:
 	EngineState resize(Pixels & src, std::uint16_t newWidth, std::uint16_t newHeight, std::uint8_t mode);
 	EngineState rotate(Pixels & src, float_t angle, std::uint8_t mode);
 	EngineState rotate2(Pixels& src, float_t angle, std::uint8_t mode);
-	EngineState flip(Pixels & src, std::uint8_t mode, std::uint16_t selectLine);
+	EngineState flip(Pixels & src, std::uint8_t mode, std::uint16_t selectLine=0);
 	EngineState HOG(Pixels const & src, Pixels & hog, Matrix & mX, Matrix & mY, 
 					std::uint16_t startX,
 					std::uint16_t startY,
