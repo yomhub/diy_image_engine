@@ -21,6 +21,11 @@ T clamp(const T min_value, const T max_value, const B value)
 	return value < min_value ? min_value
 							 : (value > max_value ? max_value : value);
 }
+template <typename T>
+inline T abs(const T value)
+{
+	return value > 0 ? value : ((T)-1) * value;
+}
 
 } // namespace detail
 
@@ -343,7 +348,7 @@ EngineState PixelEngine::rotate(Pixels & src, float_t angle, std::uint8_t mode)
 		return ENG_BUSSY;
 
 	f_state = ENG_RUNNING;
-	float_t angleR = ((abs(angle) - (int)(abs(angle) / 90) * 90) * 3.14 / 180);
+	float_t angleR = ((detail::abs(angle) - (int)(detail::abs(angle) / 90) * 90) * 3.14 / 180);
 
 	bool b_change;
 	// Decide whether to exchange XY
@@ -361,8 +366,8 @@ EngineState PixelEngine::rotate(Pixels & src, float_t angle, std::uint8_t mode)
 	}
 	float_t cosR=cos(angleR),sinR=sin(angleR);
 
-	std::uint16_t x = src.height * abs(sinR) + src.width * abs(cosR);
-	std::uint16_t y = src.height * abs(cosR) + src.width * abs(sinR);
+	std::uint16_t x = src.height * detail::abs(sinR) + src.width * detail::abs(cosR);
+	std::uint16_t y = src.height * detail::abs(cosR) + src.width * detail::abs(sinR);
 	std::uint16_t dx = 0, dy = 0;
 	std::vector<std::uint8_t> buff(x * y * src.sizePerPixel);
 
@@ -394,8 +399,8 @@ EngineState PixelEngine::rotate2(Pixels& src, float_t angle, std::uint8_t mode) 
 	float_t angleR = (angle * 3.14 / 180);
 	float_t cosR = cos(angleR), sinR = sin(angleR);
 	float_t offsetX = src.width / 2, offsetY = src.height / 2;
-	std::uint16_t x = src.height * abs(sinR) + src.width * abs(cosR);
-	std::uint16_t y = src.height * abs(cosR) + src.width * abs(sinR);
+	std::uint16_t x = src.height * detail::abs(sinR) + src.width * detail::abs(cosR);
+	std::uint16_t y = src.height * detail::abs(cosR) + src.width * detail::abs(sinR);
 
 	float_t moveM[3][3] = { cosR ,sinR,(-1) * offsetX * cosR - offsetY * sinR + x/2*cosR + y/2*sinR
 		,(-1) * sinR,cosR,offsetX * sinR - offsetY * cosR - x/2*sinR + y/2*cosR,
