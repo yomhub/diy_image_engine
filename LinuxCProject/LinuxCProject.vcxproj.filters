@@ -4,6 +4,9 @@
     <Filter Include="源文件">
       <UniqueIdentifier>{ab678003-c729-4453-9714-e917da572b77}</UniqueIdentifier>
     </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{66e4910f-44bd-4789-a677-feb0fb5d52d7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src_c\PNM_IO.c">
@@ -15,5 +18,10 @@
     <ClCompile Include="..\src_c\PixelEngine.c">
       <Filter>源文件</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src_c\include\CmdArgsMap.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

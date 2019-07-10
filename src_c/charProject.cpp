@@ -15,40 +15,41 @@
 
 #include "include/PNM_IO.h"
 #include "include/PixelEngine.h"
+#include "include/CmdArgsMap.hpp"
 
 int main(int argc, char **argv)
 {
 	bool b_help = false;
 	std::string s_inputFileName("input.pgm"), s_outputFileName("output.pgm");
-	bool b_easypgm = true;
-	bool b_mypgmtoppm = true;
+	bool b_easypgm = false;
+	bool b_mypgmtoppm = false;
 	myfloat f_R, f_B, f_G;
 	f_R = f_B = f_G = 1.0f;
-	bool b_mypgmflipV = true;
-	bool b_myppmflipH = true;
-	bool b_mypgmscale = true;
+	bool b_mypgmflipV = false;
+	bool b_myppmflipH = false;
+	bool b_mypgmscale = false;
 	myfloat f_scaleFactor = 0.5;
-	bool b_mypgmrotate = true;
+	bool b_mypgmrotate = false;
 	myfloat f_angle = 30.0f;
-	bool b_mypgmsmooth = true;
-	bool b_mysobel = true;
-	/*
+	bool b_mypgmsmooth = false;
+	bool b_mysobel = false;
+	
 	CmdArgsMap cmdArgs = CmdArgsMap(argc, argv, "--")("help", "Produce help message", &b_help)\
-	("input", "--input InputFileName: Need to specify an input file.(Default is input.pgm).", &s_inputFileName, s_inputFileName)\
-	("easypgm", "--easypgm OutputFileName: Print image size and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_easypgm)\
-	("mypgmtoppm", "--mypgmtoppm OutputFileName: Convert the image into an RGB image and produces a PPM file.", &s_outputFileName, s_outputFileName, &b_mypgmtoppm)\
-	("R", "--R float: R channel conversion parameters. (Default 1.0f)", &f_R, f_R)\
-	("B", "--B float: B channel conversion parameters. (Default 1.0f)", &f_B, f_B)\
-	("G", "--G float: G channel conversion parameters. (Default 1.0f)", &f_G, f_G)\
-	("mypgmflipV", "--mypgmflipV OutputFileName: Flip the image vertically and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_mypgmflipV)\
-	("myppmflipH", "--mypgmflipH OutputFileName: Flip the image horizontally and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_myppmflipH)\
-	("mypgmscale", "--mypgmscale OutputFileName: Shrinks or enlarges the image and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_mypgmscale)\
-	("factor", "--factor float: Mypgmscale scale factor. (Default 0.5f)", &f_scaleFactor, f_scaleFactor)\
-	("mypgmrotate", "--mypgmrotate OutputFileName: Rotate the image and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_mypgmrotate)\
-	("angle", "--angle float: Mypgmrotate angle. (Default 30.0f)", &f_angle, f_angle)\
-	("mypgmsmooth", "--mypgmrotate OutputFileName: Apply smoothing and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_mypgmsmooth)\
-	("mysobel", "--mysobel OutputFileName: Apply Sobel and Laplacian edge detector and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_mysobel)
-	;*/
+		("input", "--input InputFileName: Need to specify an input file.(Default is input.pgm).", &s_inputFileName, s_inputFileName)\
+		("easypgm", "--easypgm OutputFileName: Print image size and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_easypgm)\
+		("pgmtoppm", "--pgmtoppm OutputFileName: Convert the image into an RGB image and produces a PPM file.", &s_outputFileName, s_outputFileName, &b_mypgmtoppm)\
+		("R", "--R float: R channel conversion parameters. (Default 1.0f)", &f_R, f_R)\
+		("B", "--B float: B channel conversion parameters. (Default 1.0f)", &f_B, f_B)\
+		("G", "--G float: G channel conversion parameters. (Default 1.0f)", &f_G, f_G)\
+		("ppmflipH", "--ppmflipH OutputFileName: Flip the image vertically and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_mypgmflipV)\
+		("ppmflipH", "--ppmflipH OutputFileName: Flip the image horizontally and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_myppmflipH)\
+		("pgmscale", "--pgmscale OutputFileName: Shrinks or enlarges the image and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_mypgmscale)\
+		("factor", "--factor float: Mypgmscale scale factor. (Default 0.5f)", &f_scaleFactor, f_scaleFactor)
+		("rotate", "--rotate OutputFileName: Rotate the image and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_mypgmrotate)\
+		("angle", "--angle float: Mypgmrotate angle. (Default 30.0f)", &f_angle, f_angle)\
+		("smooth", "--smooth OutputFileName: Apply smoothing and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_mypgmsmooth)\
+		("mysobel", "--mysobel OutputFileName: Apply Sobel and Laplacian edge detector and save as OutputFileName PGM file.", &s_outputFileName, s_outputFileName, &b_mysobel)
+		;
 
 	PNM m_org, m_out;
 	m_org.filename = (char *)s_inputFileName.c_str();
@@ -254,7 +255,6 @@ int main(int argc, char **argv)
 		m_out.width = m_org.width;
 	}
 	if (b_help) {
-	
-		//std::cout << cmdArgs.help() << std::endl;
+		std::cout << cmdArgs.help() << std::endl;
 	}
 }

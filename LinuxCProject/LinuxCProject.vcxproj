@@ -86,6 +86,9 @@
     <ClCompile Include="..\src_c\PixelEngine.c" />
     <ClCompile Include="..\src_c\PNM_IO.c" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src_c\include\CmdArgsMap.hpp" />
+  </ItemGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <UndefinePreprocessorDefinitions>_WIN64;_WIN32</UndefinePreprocessorDefinitions>

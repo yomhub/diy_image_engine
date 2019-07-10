@@ -114,7 +114,7 @@ int main(int argc, char **argv)
 	{
 		// Rotate the image and save as OutputFileName PGM file.
 		peg::Pixels n_Pixels = {m_org.width, m_org.height, 1, m_org.data};
-		n_PixelEngine.rotate2(n_Pixels, f_angle, 0);
+		n_PixelEngine.rotate(n_Pixels, f_angle, 0);
 		m_out.data = n_Pixels.data;
 		m_out.width = n_Pixels.width;
 		m_out.height = n_Pixels.height;

@@ -367,15 +367,26 @@ origin
 	|
 	y+
 
-So, New X = height*cos(a+90)+width*cos(a)
-	New Y = height*sin(a+90)+width*sin(a)
+So, New X = src.height * detail::abs(sinR) + src.width * detail::abs(cosR);
+	New Y = src.height * detail::abs(cosR) + src.width * detail::abs(sinR);
+
+Rotate Matrix A is
+
+	|1 0 x/2|   |cosR -sinR  0|   |1 0 -srcX|
+	|0 1 y/2| * |sinR  cosR  0| * |0 1 -srcY|
+	|0 0 1  |   |  0     0   1|   |0 0   1  |
+
+Reverse mapping is
+			 |X'|
+	A^(-1) * |Y'|
+			 |1 |
 
 	Origin image's col row . new image's dx dy is:
 
 	dX=(height - row)*cos(a+90)+col*cos(a)
 	dY=row*sin(a+90)+col*sin(a)
-	
-An ENG_ERR is return if:
+
+An std::runtime_error is thrown if:
 	pixels data size < height * width * sizePerPixel
 	pixels sizePerPixel or height or width is 0
 
@@ -383,55 +394,40 @@ An ENG_ERR is return if:
 EngineState rotate(Pixels *src, float_t angle, uint8_t mode)
 {
     ptrImgChk(src);
-	int8_t n90 = abs(angle / 90);
-	n90 = abs(n90);
-	float_t angleR = ((abs(angle) - n90 * 90) * 3.14f / 180);
-    bool b_change;
-    // Decide whether to exchange XY
-    switch (((int)(angle) / 90) % 4)
-    {
-    case 1:
-    case 3:
-        b_change = true;
-        break;
-    case 0:
-    case 2:
-    default:
-        b_change = false;
-        break;
-    }
-    float_t cosR = cos(angleR), sinR = sin(angleR);
-
-    uint16_t x = src->height * abs(sinR) + src->width * abs(cosR);
-    uint16_t y = src->height * abs(cosR) + src->width * abs(sinR);
-    uint16_t dx = 0, dy = 0;
-    uint8_t *buff=NULL;
-
-	if (pegmalloc(&buff, (size_t)(x * y * src->sizePerPixel)) != ENG_SUCCESS)
+	
+	float_t angleR = (angle * 3.14 / 180);
+	float_t cosR = cos(angleR), sinR = sin(angleR);
+	uint16_t x = src->height * abs(sinR) + src->width * abs(cosR);
+	uint16_t y = src->height * abs(cosR) + src->width * abs(sinR);
+	uint8_t* buff = NULL;
+	if (pegmalloc(&buff, x * y * src->sizePerPixel) != ENG_SUCCESS)
 		return ENG_MEMERY_INSUFFICIENT;
-	memset(buff,0, malloc_usable_size(buff));
-    uint16_t newBsAdr,bsAdrY;
+	float_t offsetOrgX = src->width / 2, offsetOrgY = src->height / 2;
+	float_t offsetDstX = x / 2, offsetDstY = y / 2;
 
-    for (size_t row = 0; row < src->height; row += src->sizePerPixel)
-    {
-		bsAdrY = row * src->width;
-        for (size_t col = 0; col < src->width; col += src->sizePerPixel)
-        {
-            dy = row * cosR + col * sinR;
-            dx = (src->height - row) * sinR + col * cosR;
-            newBsAdr = b_change ? (dx * y + y - dy) : (dx + dy * x);
-			/*
-            buff[newBsAdr] = src->data[bsAdrY + col + 0];
-            if (src->sizePerPixel > 1)
-                buff[newBsAdr + 1] = src->data[bsAdrY + col + 1];
-            if (src->sizePerPixel > 2)
-                buff[newBsAdr + 2] = src->data[bsAdrY + col + 2];
-				*/
-			buff[b_change ? (dx * y + y - dy + 0) : (dx + dy * x + 0)] = src->data[row * src->width + col + 0];
-			if (src->sizePerPixel > 1)buff[b_change ? (dx * y + y - dy + 1) : (dx + dy * x + 1)] = src->data[row * src->width + col + 1];
-			if (src->sizePerPixel > 2)buff[b_change ? (dx * y + y - dy + 2) : (dx + dy * x + 2)] = src->data[row * src->width + col + 2];
-        }
-    }
+	float_t moveM[3][3] = { cosR ,sinR,offsetOrgX - offsetDstX * cosR - offsetDstY * sinR
+		,(-1) * sinR,cosR,offsetOrgY + offsetDstX * sinR - offsetDstY * cosR,
+		0,0,1 };
+	int16_t sx, sy;
+
+
+	for (size_t row = 0; row < y; row += src->sizePerPixel)
+	{
+		for (size_t col = 0; col < x; col += src->sizePerPixel)
+		{
+			sx = (col)* moveM[0][0] + (row)* moveM[0][1] + moveM[0][2];
+			sy = (col)* moveM[1][0] + (row)* moveM[1][1] + moveM[1][2];
+			if (sx >= 0 && sx < src->width && sy >= 0 && sy < src->height) {
+				buff[row * x + col + 0] = src->data[sy * src->width + sx + 0];
+				if (src->sizePerPixel > 1)buff[row * x + col + 1] = src->data[sy * src->width + sx + 1];
+				if (src->sizePerPixel > 2)buff[row * x + col + 2] = src->data[sy * src->width + sx + 2];
+			}
+			else {
+				buff[row * x + col + 0] = 0;
+			}
+		}
+	}
+
 
     free(src->data);
     src->data = NULL;
@@ -441,8 +437,8 @@ EngineState rotate(Pixels *src, float_t angle, uint8_t mode)
 	tmp = malloc_usable_size(src->data);
     memcpy(src->data, buff, x * y * src->sizePerPixel);
 
-    src->height = b_change ? x : y;
-    src->width = b_change ? y : x;
+    src->height = y;
+    src->width = x;
     free(buff);
     return ENG_SUCCESS;
 }
